@@ -1,5 +1,4 @@
-# THREAT HUNT - BEC-Investigation-MFA-Fatigue-Scattered-Spider
-BEC is the most common attack vector in the real world.
+# THREAT HUNT - BEC-Investigation-MFA-Fatigue
 # 🛡️ BEC Investigation – Scattered Spider (MFA Fatigue Attack)
 
 <p align="leftr">
