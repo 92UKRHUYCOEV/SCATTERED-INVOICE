@@ -10,6 +10,7 @@ MITRE ATT&CK: T1621 – MFA Request Generation
 📌 Description: Detects repeated MFA failures followed by a successful authentication from the same IP.
 
 🔍 Query
+```kql
 let timeframe = 15m;
 SigninLogs
 | where TimeGenerated > ago(timeframe)
@@ -21,6 +22,7 @@ SigninLogs
     | where ResultType == 0
     | project UserPrincipalName, IPAddress, SuccessTime = TimeGenerated
 ) on UserPrincipalName, IPAddress
+```
 
 🎯 Alert Logic
 Trigger when ≥ 3 MFA failures followed by success
