@@ -74,4 +74,5 @@ The attack leveraged MFA fatigue, inbox rule persistence, and internal email fra
 
 ## 📂 Project Structure
 
-See `/queries`, `/docs`, and `/images` for full investigation artifacts.
+- `/queries` → KQL queries used during investigation  
+- `/docs` → Final incident reports and documentation
