@@ -2,15 +2,16 @@
 
 This document converts investigation queries into actionable detection rules for Microsoft Sentinel.
 
-🚪 Rule 1 – MFA Fatigue Detection
-Name: MFA Fatigue Attack Detected
-Severity: High
-MITRE ATT&CK: T1621 – MFA Request Generation
+## 🚪 Figure 1 – MFA Fatigue Detection
 
-📌 Description: Detects repeated MFA failures followed by a successful authentication from the same IP.
+**MITRE ATT&CK:** T1621 – Multi-Factor Authentication Request Generation
 
-🔍 Query
-```kql
+* **What it does:**
+  Detects repeated MFA push attempts followed by a successful login from the same IP.
+
+### 🔍 Query
+
+```kql id="xw8w2c"
 let timeframe = 15m;
 SigninLogs
 | where TimeGenerated > ago(timeframe)
@@ -23,7 +24,11 @@ SigninLogs
     | project UserPrincipalName, IPAddress, SuccessTime = TimeGenerated
 ) on UserPrincipalName, IPAddress
 ```
-🎯 Alert Logic: Trigger when ≥ 3 MFA failures followed by success, Same user + IP
+
+### 🎯 Alert Logic
+
+* Trigger when **3+ MFA failures**
+* Followed by **successful login from same IP**
 
 ---
 
