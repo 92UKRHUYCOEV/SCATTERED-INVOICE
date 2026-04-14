@@ -1,5 +1,9 @@
 # 🛡️ BEC Investigation – MFA Fatigue Attack (Scattered Spider)
 
+![SOC Analysis](https://img.shields.io/badge/SOC-Analysis-blue)
+![MITRE ATT&CK](https://img.shields.io/badge/MITRE-TTPs-red)
+![KQL](https://img.shields.io/badge/KQL-Queries-green)
+
 <p align="leftr">
   <img src="attack-diagram.png" width="70%">
 </p>
