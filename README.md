@@ -1,4 +1,4 @@
-# SCATTERED-INVOICE
+# THREAT HUNT - SCATTERED-INVOICE
 BEC is the most common attack vector in the real world.
 # 🛡️ BEC Investigation – Scattered Spider (MFA Fatigue Attack)
 
