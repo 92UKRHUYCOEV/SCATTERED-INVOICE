@@ -51,8 +51,8 @@ The investigation was conducted using:
   - `queries` (coming soon)  
   - [`sentinel-analytics.md`](./detection-rules/sentinel-analytics.md) – Primary detection rules  
 
-  - **Automation / SOAR**  
-  See [`automation`](./automation/) for response playbooks  
+ - **Automation / SOAR**  
+  See [playbooks.md](./automation/playbooks.md) for response playbooks  
 
 ---
 
