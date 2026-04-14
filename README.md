@@ -2,9 +2,10 @@
 BEC is the most common attack vector in the real world.
 # 🛡️ BEC Investigation – Scattered Spider (MFA Fatigue Attack)
 
-<p align="center">
-  <img src="attack-diagram.png" width="50%">
+<p align="leftr">
+  <img src="attack-diagram.png" width="70%">
 </p>
+
 ### Figure 1 – BEC Attack Kill Chain
 MFA fatigue → Inbox rule persistence → Internal fraud → Data access
 
