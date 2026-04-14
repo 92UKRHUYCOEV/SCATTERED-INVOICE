@@ -1,21 +1,30 @@
-# THREAT HUNT - BEC-Investigation-MFA-Fatigue
-# 🛡️ BEC Investigation – Scattered Spider (MFA Fatigue Attack)
+# 🛡️ BEC Investigation – MFA Fatigue Attack (Scattered Spider)
 
 <p align="leftr">
-  <img src="attack-diagram.png" width="60%">
+  <img src="attack-diagram.png" width="70%">
 </p>
 ### Figure 1 – BEC Attack Kill Chain
 MFA fatigue → Inbox rule persistence → Internal fraud → Data access
 
+---
+
 ## 📌 Overview
-This project documents a full-scale Business Email Compromise (BEC) investigation conducted using Microsoft Sentinel logs.
+
+This project demonstrates a full-scale SOC investigation of a Business Email Compromise (BEC) attack leveraging MFA fatigue and inbox rule persistence.
+The analysis was performed using Microsoft Sentinel log sources, including SigninLogs, CloudAppEvents, and EmailEvents, to trace attacker behavior from initial access to impact.
+
+---
 
 ## 🏆 Key Wins
-- Identified MFA fatigue attack pattern from sign-in logs  
-- Correlated attacker activity across SigninLogs, CloudAppEvents, and EmailEvents  
-- Detected persistence via malicious inbox rules  
-- Confirmed BEC execution targeting finance user  
-- Traced attacker activity to OneDrive and SharePoint access  
+
+* Identified MFA fatigue attack pattern from authentication logs
+* Correlated attacker activity across multiple telemetry sources
+* Detected persistence via malicious inbox rules
+* Confirmed BEC execution targeting internal finance user
+* Traced attacker activity to OneDrive and SharePoint access
+
+---
+
 
 The attack leveraged MFA fatigue, inbox rule persistence, and internal email fraud to target financial operations.
 
