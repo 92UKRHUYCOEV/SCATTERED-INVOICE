@@ -1,18 +1,23 @@
-🚨 Detection Rules – Microsoft Sentinel (BEC Investigation)
+# 🚨 Microsoft Sentinel Detection Rules – BEC Investigation
 
-This document converts investigation queries into actionable detection rules for Microsoft Sentinel.
+This document defines **production-ready analytics rules** derived from the investigation of a Business Email Compromise (BEC) attack involving MFA fatigue, inbox rule persistence, and post-compromise activity.
 
-🌍 Rule 1 – MFA Fatigue Detection
+These detections are designed for **operational deployment within a SOC**, enabling automated alerting, investigation, and response.
 
+---
+
+## 🚪 Rule 1 – MFA Fatigue Attack Detection
+
+**Severity:** High
 **MITRE ATT&CK:** T1621 – Multi-Factor Authentication Request Generation
-Severity: Medium
 
-* **What it does:**
-  Detects repeated MFA push attempts followed by a successful login from the same IP.
+### 📌 Description
 
-### 🔍 Query
+Detects repeated MFA challenges followed by a successful authentication from the same IP address, indicative of MFA fatigue (push bombing).
 
-```kql id="xw8w2c"
+### 🔍 Detection Query
+
+```kql
 let timeframe = 15m;
 SigninLogs
 | where TimeGenerated > ago(timeframe)
@@ -26,22 +31,30 @@ SigninLogs
 ) on UserPrincipalName, IPAddress
 ```
 
-### 🎯 Alert Logic
+### 🎯 Detection Logic
 
-* Trigger when **3+ MFA failures**
-* Followed by **successful login from same IP**
+* ≥ 3 MFA failures within 15 minutes
+* Followed by successful authentication
+* Same user and IP address
+
+### 🛠️ Operational Considerations
+
+* Tune threshold to reduce false positives
+* Consider excluding known trusted IP ranges
 
 ---
 
-🌍 Rule 2 – Suspicious Login from Unmanaged Device
+## 🌍 Rule 2 – Suspicious Login from Unmanaged Device
 
+**Severity:** Medium
 **MITRE ATT&CK:** T1078 – Valid Accounts
-Severity: Medium
 
-* **What it does:**
-  Detects successful login from non-managed or unusual devices.
+### 📌 Description
 
-🔍 Query
+Identifies successful authentication from unmanaged or unusual devices (e.g., Linux systems in enterprise environments).
+
+### 🔍 Detection Query
+
 ```kql
 SigninLogs
 | where ResultType == 0
@@ -49,39 +62,58 @@ SigninLogs
 | project TimeGenerated, UserPrincipalName, IPAddress, DeviceDetail
 ```
 
-### 🎯 Alert Logic
-* Trigger on Linux or unknown devices
+### 🎯 Detection Logic
+
+* Successful login
+* Device not aligned with corporate baseline
+
+### 🛠️ Operational Considerations
+
+* Validate against known admin or developer systems
+* Combine with geo/location anomalies for stronger signal
 
 ---
 
-🌍 Rule 3 – Inbox Rule Creation Detection
+## ⚙️ Rule 3 – Inbox Rule Persistence Detection
 
+**Severity:** High
 **MITRE ATT&CK:** T1564.008 – Email Hiding Rules
-Severity: High
 
-* **What it does:**
-  Suspicious Inbox Rule Creation, Detects creation of inbox rules, commonly used for persistence and evasion.
+### 📌 Description
 
-🔍 Query
+Detects creation of inbox rules commonly used for persistence and evasion in BEC attacks.
+
+### 🔍 Detection Query
+
 ```kql
 CloudAppEvents
 | where ActionType == "New-InboxRule"
 | project TimeGenerated, AccountDisplayName, IPAddress
 ```
-###🎯 Alert Logic 
-*Trigger on ANY new inbox rule, Prioritize external IPs
+
+### 🎯 Detection Logic
+
+* Trigger on all new inbox rule creation events
+* Prioritize external or anomalous IPs
+
+### 🛠️ Operational Considerations
+
+* Baseline normal rule creation activity
+* Alert enrichment should include rule parameters
 
 ---
 
-🌍 Rule 4 – Email Forwarding to External Address
+## 📤 Rule 4 – External Email Forwarding Detection
 
+**Severity:** High
 **MITRE ATT&CK:** T1114 – Email Collection
-Severity: High
 
-* **What it does:**
-  Suspicious Email Forwarding Rule, Detects forwarding of emails to external domains.
+### 📌 Description
 
-🔍 Query
+Detects forwarding of emails to external domains, commonly used for data exfiltration.
+
+### 🔍 Detection Query
+
 ```kql
 CloudAppEvents
 | where ActionType == "New-InboxRule"
@@ -91,56 +123,87 @@ CloudAppEvents
 | where tostring(param.Value) !endswith "@lognpacific.org"
 | project TimeGenerated, AccountDisplayName, ForwardTo = tostring(param.Value)
 ```
-###🎯 Alert Logic
-* Trigger on forwarding to external domains
+
+### 🎯 Detection Logic
+
+* Inbox rule with external forwarding destination
+
+### 🛠️ Operational Considerations
+
+* Maintain allowlist for approved forwarding domains
+* Combine with user risk signals for prioritization
 
 ---
 
-🌍 Rule 5 – Internal BEC Email Detection
+## 📧 Rule 5 – Internal BEC Email Detection
 
+**Severity:** High
 **MITRE ATT&CK:** T1566 – Phishing
-Severity: High
-* **What it does:**
-  Internal Fraud Email Detected, Detects suspicious internal emails containing financial keywords.
 
-🔍 Query
+### 📌 Description
+
+Identifies potentially fraudulent internal emails containing financial or payment-related keywords.
+
+### 🔍 Detection Query
+
 ```kql
 EmailEvents
 | where SenderFromAddress endswith "@lognpacific.org"
 | where Subject has_any ("invoice", "payment", "wire", "transfer")
 | project TimeGenerated, SenderFromAddress, RecipientEmailAddress, Subject
 ```
-###🎯 Alert Logic
-*Internal sender + financial keywords
+
+### 🎯 Detection Logic
+
+* Internal sender
+* Financial keywords in subject
+
+### 🛠️ Operational Considerations
+
+* Tune keyword list to reduce noise
+* Correlate with recent login anomalies
 
 ---
 
-🌍 Rule 6 – File Access After Suspicious Login
+## 📁 Rule 6 – Post-Compromise File Access Detection
 
-MITRE ATT&CK: T1213 – Data from Information Repositories
-Severity: Medium
-* **What it does:**
-* Post-Compromise File Access, Detects file access following suspicious authentication activity.
+**Severity:** Medium
+**MITRE ATT&CK:** T1213 – Data from Information Repositories
 
-🔍 Query
+### 📌 Description
+
+Detects file access activity that may indicate data exposure following account compromise.
+
+### 🔍 Detection Query
+
 ```kql
 CloudAppEvents
 | where ActionType == "FileAccessed"
 | project TimeGenerated, AccountDisplayName, Application, IPAddress
 ```
-###🎯 Alert Logic
-* File access from suspicious IP/device
+
+### 🎯 Detection Logic
+
+* File access activity post-authentication
+
+### 🛠️ Operational Considerations
+
+* Correlate with suspicious login events
+* Prioritize sensitive file access
 
 ---
 
-🌍 Rule 7 – Session Correlation Alert
-**MITRE ATT&CK:** T1078 - Multi-Stage Attack Correlation
-Severity: High
+## 🔗 Rule 7 – Multi-Stage Attack Correlation
 
-* **What it does:**
-* Identifies multiple suspicious actions tied to the same session.
+**Severity:** High
+**MITRE ATT&CK:** T1078 – Valid Accounts
 
-🔍 Query
+### 📌 Description
+
+Identifies multiple suspicious actions occurring within the same session, indicating a coordinated attack sequence.
+
+### 🔍 Detection Query
+
 ```kql
 CloudAppEvents
 | extend data = parse_json(RawEventData)
@@ -149,21 +212,45 @@ CloudAppEvents
 | summarize Actions = make_set(ActionType) by AadSessionId
 | where array_length(Actions) > 3
 ```
-###🎯 Alert Logic
-* Multiple suspicious actions in one session
 
-🧠 Detection Strategy Summary
-This detection set enables:
--- Early detection of MFA fatigue attacks
--- Identification of persistence mechanisms
--- Detection of BEC execution
--- Visibility into post-compromise behavior
+### 🎯 Detection Logic
 
+* Multiple suspicious actions within a single session
 
-🏆 SOC Value: 
-These rules demonstrate:
--- Threat-informed detection engineering
--- MITRE ATT&CK alignment
--- Real-world applicability in Microsoft Sentinel
+### 🛠️ Operational Considerations
 
-These detections are production-ready and can be directly deployed as Microsoft Sentinel Analytics Rules within a SOC environment.
+* Use for high-confidence alerting
+* Ideal for incident enrichment
+
+---
+
+# 🧠 Detection Strategy Overview
+
+These analytics rules collectively provide:
+
+* Early detection of identity-based attacks
+* Visibility into persistence mechanisms
+* Detection of BEC execution
+* Monitoring of post-compromise activity
+
+Microsoft Sentinel analytics rules operate as **scheduled KQL queries that generate alerts when conditions are met**, enabling automated incident creation and investigation workflows. ([OneUptime][1])
+
+---
+
+# 🏆 SOC Implementation Value
+
+These detections are production-ready and can be directly deployed as Microsoft Sentinel Analytics Rules within a SOC environment, supporting:
+
+* Threat-informed detection engineering
+* Reduced time to detect (MTTD)
+* Integration with automation playbooks for rapid response
+
+---
+
+# 🔥 Analyst Insight
+
+This detection set reflects modern attacker behavior, where identity compromise, persistence, and data access occur within a single session.
+
+Combining identity, email, and cloud telemetry is critical for detecting and responding to these attack patterns effectively.
+
+[1]: https://oneuptime.com/blog/post/2026-02-16-how-to-create-microsoft-sentinel-analytics-rules-to-detect-suspicious-sign-in-patterns/view?utm_source=chatgpt.com "Create Microsoft Sentinel Analytics Rules to Detect ..."
