@@ -2,9 +2,10 @@
 
 This document converts investigation queries into actionable detection rules for Microsoft Sentinel.
 
-## 🚪 Figure 1 – MFA Fatigue Detection
+🌍 Rule 1 – MFA Fatigue Detection
 
 **MITRE ATT&CK:** T1621 – Multi-Factor Authentication Request Generation
+Severity: Medium
 
 * **What it does:**
   Detects repeated MFA push attempts followed by a successful login from the same IP.
@@ -33,11 +34,12 @@ SigninLogs
 ---
 
 🌍 Rule 2 – Suspicious Login from Unmanaged Device
-Name: Suspicious Login – Unmanaged Device
-Severity: Medium
-MITRE ATT&CK: T1078 – Valid Accounts
 
-📌 Description: Detects successful login from non-managed or unusual devices.
+**MITRE ATT&CK:** T1078 – Valid Accounts
+Severity: Medium
+
+* **What it does:**
+  Detects successful login from non-managed or unusual devices.
 
 🔍 Query
 ```kql
@@ -46,16 +48,19 @@ SigninLogs
 | where DeviceDetail has "Linux"
 | project TimeGenerated, UserPrincipalName, IPAddress, DeviceDetail
 ```
-🎯 Alert Logic: Trigger on Linux or unknown devices
+
+### 🎯 Alert Logic
+* Trigger on Linux or unknown devices
 
 ---
 
-⚙️ Rule 3 – Inbox Rule Creation Detection
-Name: Suspicious Inbox Rule Creation
-Severity: High
-MITRE ATT&CK: T1564.008 – Email Hiding Rules
+🌍 Rule 3 – Inbox Rule Creation Detection
 
-📌 Description: Detects creation of inbox rules, commonly used for persistence and evasion.
+**MITRE ATT&CK:** T1564.008 – Email Hiding Rules
+Severity: High
+
+* **What it does:**
+  Suspicious Inbox Rule Creation, Detects creation of inbox rules, commonly used for persistence and evasion.
 
 🔍 Query
 ```kql
@@ -63,17 +68,18 @@ CloudAppEvents
 | where ActionType == "New-InboxRule"
 | project TimeGenerated, AccountDisplayName, IPAddress
 ```
-🎯 Alert Logic: Trigger on ANY new inbox rule, Prioritize external IPs
+###🎯 Alert Logic 
+*Trigger on ANY new inbox rule, Prioritize external IPs
 
 ---
 
-📤 Rule 4 – Email Forwarding to External Address
+🌍 Rule 4 – Email Forwarding to External Address
 
-Name: Suspicious Email Forwarding Rule
+**MITRE ATT&CK:** T1114 – Email Collection
 Severity: High
-MITRE ATT&CK: T1114 – Email Collection
 
-📌 Description: Detects forwarding of emails to external domains.
+* **What it does:**
+  Suspicious Email Forwarding Rule, Detects forwarding of emails to external domains.
 
 🔍 Query
 ```kql
@@ -85,17 +91,17 @@ CloudAppEvents
 | where tostring(param.Value) !endswith "@lognpacific.org"
 | project TimeGenerated, AccountDisplayName, ForwardTo = tostring(param.Value)
 ```
-🎯 Alert Logic: Trigger on forwarding to external domains
+###🎯 Alert Logic
+* Trigger on forwarding to external domains
 
 ---
 
-📧 Rule 5 – Internal BEC Email Detection
+🌍 Rule 5 – Internal BEC Email Detection
 
-Name: Internal Fraud Email Detected
+**MITRE ATT&CK:** T1566 – Phishing
 Severity: High
-MITRE ATT&CK: T1566 – Phishing
-
-📌 Description: Detects suspicious internal emails containing financial keywords.
+* **What it does:**
+  Internal Fraud Email Detected, Detects suspicious internal emails containing financial keywords.
 
 🔍 Query
 ```kql
@@ -104,17 +110,17 @@ EmailEvents
 | where Subject has_any ("invoice", "payment", "wire", "transfer")
 | project TimeGenerated, SenderFromAddress, RecipientEmailAddress, Subject
 ```
-🎯 Alert Logic: Internal sender + financial keywords
+###🎯 Alert Logic
+*Internal sender + financial keywords
 
 ---
 
-📁 Rule 6 – File Access After Suspicious Login
+🌍 Rule 6 – File Access After Suspicious Login
 
-Name: Post-Compromise File Access
-Severity: Medium
 MITRE ATT&CK: T1213 – Data from Information Repositories
-
-📌 Description: Detects file access following suspicious authentication activity.
+Severity: Medium
+* **What it does:**
+* Post-Compromise File Access, Detects file access following suspicious authentication activity.
 
 🔍 Query
 ```kql
@@ -122,17 +128,17 @@ CloudAppEvents
 | where ActionType == "FileAccessed"
 | project TimeGenerated, AccountDisplayName, Application, IPAddress
 ```
-🎯 Alert Logic: File access from suspicious IP/device
+###🎯 Alert Logic
+* File access from suspicious IP/device
 
 ---
 
-🔗 Rule 7 – Session Correlation Alert
-
-Name: Multi-Stage Attack Correlation
+🌍 Rule 7 – Session Correlation Alert
+**MITRE ATT&CK:** T1078 - Multi-Stage Attack Correlation
 Severity: High
-MITRE ATT&CK: T1078
 
-📌 Description: Identifies multiple suspicious actions tied to the same session.
+* **What it does:**
+* Identifies multiple suspicious actions tied to the same session.
 
 🔍 Query
 ```kql
@@ -143,20 +149,21 @@ CloudAppEvents
 | summarize Actions = make_set(ActionType) by AadSessionId
 | where array_length(Actions) > 3
 ```
-🎯 Alert Logic: Multiple suspicious actions in one session
+###🎯 Alert Logic
+* Multiple suspicious actions in one session
 
 🧠 Detection Strategy Summary
 This detection set enables:
+-- Early detection of MFA fatigue attacks
+-- Identification of persistence mechanisms
+-- Detection of BEC execution
+-- Visibility into post-compromise behavior
 
-Early detection of MFA fatigue attacks
-Identification of persistence mechanisms
-Detection of BEC execution
-Visibility into post-compromise behavior
 
-🏆 SOC Value: These rules demonstrate:
+🏆 SOC Value: 
+These rules demonstrate:
+-- Threat-informed detection engineering
+-- MITRE ATT&CK alignment
+-- Real-world applicability in Microsoft Sentinel
 
-Threat-informed detection engineering
-MITRE ATT&CK alignment
-Real-world applicability in Microsoft Sentinel
-
-They can be directly implemented as Analytics Rules in a production SOC.
+These detections are production-ready and can be directly deployed as Microsoft Sentinel Analytics Rules within a SOC environment.
