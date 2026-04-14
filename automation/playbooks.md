@@ -2,7 +2,7 @@
 
 This document outlines automated response workflows (SOAR) for detecting and responding to a Business Email Compromise (BEC) attack using Microsoft Sentinel and Logic Apps.
 
-🚨 Playbook 1 – MFA Fatigue Response
+## 🚨 **Playbook 1 – MFA Fatigue Response**
 
 Trigger: MFA Fatigue Detection Alert
 Severity: High
@@ -25,7 +25,7 @@ Automatically respond to suspected MFA fatigue attacks to prevent account compro
 
 ---
 
-⚙️ Playbook 2 – Inbox Rule Persistence Response
+## ⚙️ **Playbook 2 – Inbox Rule Persistence Response**
 
 Trigger: Suspicious Inbox Rule Creation
 Severity: High
@@ -48,7 +48,7 @@ Remove attacker persistence mechanisms and prevent data exfiltration.
 
 ---
 
-📧 Playbook 3 – BEC Email Containment
+## 📧 **Playbook 3 – BEC Email Containment**
 
 Trigger: Internal Fraud Email Detection
 Severity: High
@@ -70,7 +70,7 @@ Contain fraudulent emails and prevent financial loss.
 
 ---
 
-📁 Playbook 4 – Post-Compromise Data Access Investigation
+## 📁 **Playbook 4 – Post-Compromise Data Access Investigation**
 
 Trigger: File Access After Suspicious Login
 Severity: Medium
@@ -92,7 +92,7 @@ Investigate potential data exfiltration.
 
 ---
 
-🔗 Playbook 5 – Session Correlation & Incident Enrichment
+## 🔗 **Playbook 5 – Session Correlation & Incident Enrichment**
 
 Trigger: Multi-Stage Attack Correlation
 Severity: High
