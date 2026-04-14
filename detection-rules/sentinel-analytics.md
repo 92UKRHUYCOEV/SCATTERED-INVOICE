@@ -22,18 +22,6 @@ SigninLogs
     | project UserPrincipalName, IPAddress, SuccessTime = TimeGenerated
 ) on UserPrincipalName, IPAddress
 
-**```kql
-SigninLogs
-| where UserPrincipalName == "m.smith@lognpacific.org"
-| where ResultType in (50074, 50140, 0)
-| project TimeGenerated, ResultType, IPAddress, AppDisplayName
-| sort by TimeGenerated asc
-```**
-
-
-
-
-
 🎯 Alert Logic
 Trigger when ≥ 3 MFA failures followed by success
 Same user + IP
