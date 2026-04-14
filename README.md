@@ -42,13 +42,17 @@ The investigation was conducted using:
 
 ---
 
-🔎 Detection & Analysis
-Key Artifacts
+## 🔎 Detection & Analysis
 
-- KQL Queries: See /queries for investigation queries
-- Detection Rules (Primary):  sentinel-analytics.md
-  Production-ready Microsoft Sentinel analytics rules with MITRE mapping
-- Automation / SOAR: See /automation for response playbooks
+### Key Artifacts
+
+- **KQL Queries & Detection Rules (Primary)**  
+  Investigation queries were used to identify attacker behavior and later refined into production detection rules.  
+  - [`/queries`](queries/) – Investigation queries  
+  - [`sentinel-analytics.md`](detection-rules/sentinel-analytics.md) – Primary detection rules  
+
+- **Automation / SOAR**  
+  See [`/automation`](automation/) for response playbooks  
 
 ---
 
