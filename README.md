@@ -52,7 +52,7 @@ The investigation was conducted using:
   - [`sentinel-analytics.md`](./detection-rules/sentinel-analytics.md) – Primary detection rules  
 
 - **Automation / SOAR**  
-  See [`automation`](./automation/) for response playbooks  
+  See [`automation`](./automation.md/) for response playbooks  
 
 ---
 
