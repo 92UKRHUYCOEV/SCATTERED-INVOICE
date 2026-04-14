@@ -23,10 +23,7 @@ SigninLogs
     | project UserPrincipalName, IPAddress, SuccessTime = TimeGenerated
 ) on UserPrincipalName, IPAddress
 ```
-
-🎯 Alert Logic
-Trigger when ≥ 3 MFA failures followed by success
-Same user + IP
+🎯 Alert Logic: Trigger when ≥ 3 MFA failures followed by success, Same user + IP
 
 ---
 
@@ -38,18 +35,17 @@ MITRE ATT&CK: T1078 – Valid Accounts
 📌 Description: Detects successful login from non-managed or unusual devices.
 
 🔍 Query
+```kql
 SigninLogs
 | where ResultType == 0
 | where DeviceDetail has "Linux"
 | project TimeGenerated, UserPrincipalName, IPAddress, DeviceDetail
-
-🎯 Alert Logic
-Trigger on Linux or unknown devices
+```
+🎯 Alert Logic: Trigger on Linux or unknown devices
 
 ---
 
 ⚙️ Rule 3 – Inbox Rule Creation Detection
-
 Name: Suspicious Inbox Rule Creation
 Severity: High
 MITRE ATT&CK: T1564.008 – Email Hiding Rules
@@ -57,13 +53,12 @@ MITRE ATT&CK: T1564.008 – Email Hiding Rules
 📌 Description: Detects creation of inbox rules, commonly used for persistence and evasion.
 
 🔍 Query
+```kql
 CloudAppEvents
 | where ActionType == "New-InboxRule"
 | project TimeGenerated, AccountDisplayName, IPAddress
-
-🎯 Alert Logic
-Trigger on ANY new inbox rule
-Prioritize external IPs
+```
+🎯 Alert Logic: Trigger on ANY new inbox rule, Prioritize external IPs
 
 ---
 
@@ -76,6 +71,7 @@ MITRE ATT&CK: T1114 – Email Collection
 📌 Description: Detects forwarding of emails to external domains.
 
 🔍 Query
+```kql
 CloudAppEvents
 | where ActionType == "New-InboxRule"
 | extend data = parse_json(RawEventData)
@@ -83,9 +79,8 @@ CloudAppEvents
 | where tostring(param.Name) == "ForwardTo"
 | where tostring(param.Value) !endswith "@lognpacific.org"
 | project TimeGenerated, AccountDisplayName, ForwardTo = tostring(param.Value)
-
-🎯 Alert Logic
-Trigger on forwarding to external domains
+```
+🎯 Alert Logic: Trigger on forwarding to external domains
 
 ---
 
@@ -98,12 +93,13 @@ MITRE ATT&CK: T1566 – Phishing
 📌 Description: Detects suspicious internal emails containing financial keywords.
 
 🔍 Query
+```kql
 EmailEvents
 | where SenderFromAddress endswith "@lognpacific.org"
 | where Subject has_any ("invoice", "payment", "wire", "transfer")
 | project TimeGenerated, SenderFromAddress, RecipientEmailAddress, Subject
-🎯 Alert Logic
-Internal sender + financial keywords
+```
+🎯 Alert Logic: Internal sender + financial keywords
 
 ---
 
@@ -116,11 +112,12 @@ MITRE ATT&CK: T1213 – Data from Information Repositories
 📌 Description: Detects file access following suspicious authentication activity.
 
 🔍 Query
+```kql
 CloudAppEvents
 | where ActionType == "FileAccessed"
 | project TimeGenerated, AccountDisplayName, Application, IPAddress
-🎯 Alert Logic
-File access from suspicious IP/device
+```
+🎯 Alert Logic: File access from suspicious IP/device
 
 ---
 
@@ -133,15 +130,15 @@ MITRE ATT&CK: T1078
 📌 Description: Identifies multiple suspicious actions tied to the same session.
 
 🔍 Query
+```kql
 CloudAppEvents
 | extend data = parse_json(RawEventData)
 | extend ctx = parse_json(tostring(data.AppAccessContext))
 | project AadSessionId = tostring(ctx.AADSessionId), ActionType
 | summarize Actions = make_set(ActionType) by AadSessionId
 | where array_length(Actions) > 3
-
-🎯 Alert Logic
-Multiple suspicious actions in one session
+```
+🎯 Alert Logic: Multiple suspicious actions in one session
 
 🧠 Detection Strategy Summary
 This detection set enables:
