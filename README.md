@@ -42,6 +42,22 @@ The investigation was conducted using:
 
 ---
 
+## Attack Timeline
+
+| Time (UTC) | Event |
+|---|---|
+| 21:54:24 | First MFA fatigue attempt (ResultType 50074) |
+| 21:54:55 | Second MFA denial (ResultType 50140) |
+| 21:55:15 | Third MFA denial (ResultType 50140) |
+| 21:59:52 | MFA approved, attacker signs in to One Outlook Web |
+| ~22:00 | MailItemsAccessed, attacker reads Mark's emails |
+| 22:02 | Forward rule (`.`) created, sends invoice emails to insights@duck.com |
+| 22:03 | Delete rule (`..`) created, auto-deletes security alerts |
+| ~22:09 | Attacker accesses SharePoint and OneDrive files |
+| ~22:24 | BEC email sent to j.reynolds with fraudulent invoice |
+
+---
+
 ## MITRE ATT&CK Mapping
 
 | Attack Phase | Technique | ID | What Happened | Detection Gap |
@@ -68,6 +84,43 @@ The investigation was conducted using:
 
  - **Automation / SOAR**  
   See [playbooks.md](./automation/playbooks.md) for response playbooks  
+
+---
+
+## Flag Summary
+
+| # | Question | Flag |
+|---|----------|------|
+| Q00 | Workspace name | `law-cyber-range` |
+| Q01 | Compromised account | `m.smith@lognpacific.org` |
+| Q02 | Attacker source IP | `205.147.16.190` |
+| Q03 | Attack origin country | `NL` |
+| Q04 | MFA denial error code | `50074` |
+| Q05 | MFA fatigue intensity | `3` |
+| Q06 | Application accessed | `One Outlook Web` |
+| Q07 | Attacker OS | `Linux` |
+| Q08 | Attacker browser | `Firefox 147.0` |
+| Q09 | First post-auth action | `MailItemsAccessed` |
+| Q10 | Rule creation method | `New-InboxRule` |
+| Q11 | Forward rule name | `.` |
+| Q12 | Forward destination | `insights@duck.com` |
+| Q13 | Forward keywords | `invoice, payment, wire, transfer` |
+| Q14 | Rule processing flag | `StopProcessingRules` |
+| Q15 | Delete rule name | `..` |
+| Q16 | Delete keywords | `suspicious, security, phishing, unusual, compromised, verify` |
+| Q17 | BEC target | `j.reynolds@lognpacific.org` |
+| Q18 | BEC subject line | `RE: Invoice #INV-2026-0892 - Updated Banking Details` |
+| Q19 | Email direction | `Intra-org` |
+| Q20 | BEC sender IP | `205.147.16.190` |
+| Q21 | Cloud app accessed | `Microsoft OneDrive for Business` |
+| Q22 | SharePoint app accessed | `Microsoft SharePoint Online` |
+| Q23 | Session correlation | `00225cfa-a0ff-fb46-a079-5d152fcdf72a` |
+| Q24 | Conditional Access status | `notApplied` |
+| Q25 | MFA fatigue MITRE ID | `T1621` |
+| Q26 | Email rules MITRE ID | `T1564.008` |
+| Q27 | Credential source | `infostealer` |
+| Q28 | Immediate containment | `revoke sessions` |
+| Q29 | Threat actor attribution | `Scattered Spider` |
 
 ---
 
