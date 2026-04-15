@@ -73,21 +73,6 @@ The investigation was conducted using:
 
 ---
 
-## MITRE ATT&CK Mapping
-
-| Attack Phase | Technique | ID | What Happened | Detection Gap |
-|---|---|---|---|---|
-| Initial Access | Valid Accounts: Cloud Accounts | T1078.004 | Attacker used Mark's stolen credentials to authenticate | No alerting on sign-ins from anomalous locations or devices |
-| Initial Access | MFA Request Generation | T1621 | 3 MFA push spam attempts before user approved | No detection for repeated MFA denials followed by approval |
-| Persistence | Email Forwarding Rule | T1114.003 | Forward rule (`.`) sending invoice-related emails to external address | No alerting on new inbox rules with external forwarding |
-| Defence Evasion | Email Hiding Rules | T1564.008 | Delete rule (`..`) removing security alert emails automatically | No alerting on rules that delete emails matching security keywords |
-| Collection | Email Collection: Remote Email Collection | T1114.002 | MailItemsAccessed events from attacker IP across the session | No alerting on mailbox access from new/unusual IPs |
-| Lateral Movement | Internal Spearphishing | T1534 | BEC email sent internally from compromised account to Finance | Intra-org email bypassed external gateway controls entirely |
-| Collection | Data from Cloud Storage | T1530 | Attacker accessed OneDrive and SharePoint files | No alerting on file access from suspicious session context |
-| Resource Development | Obtain Credentials: Purchase | T1589.001 | Credentials likely purchased from infostealer marketplace | Outside org's detection scope, but password hygiene and monitoring for leaked creds could help |
-
----
-
 ## 🔎 Detection & Analysis
 
 ### Key Artifacts
@@ -181,6 +166,21 @@ SOAR playbooks were developed to:
 -- /automation
 - SOAR playbooks and response workflows
 -- /docs  Final incident report and documentation
+
+---
+
+## MITRE ATT&CK Mapping
+
+| Attack Phase | Technique | ID | What Happened | Detection Gap |
+|---|---|---|---|---|
+| Initial Access | Valid Accounts: Cloud Accounts | T1078.004 | Attacker used Mark's stolen credentials to authenticate | No alerting on sign-ins from anomalous locations or devices |
+| Initial Access | MFA Request Generation | T1621 | 3 MFA push spam attempts before user approved | No detection for repeated MFA denials followed by approval |
+| Persistence | Email Forwarding Rule | T1114.003 | Forward rule (`.`) sending invoice-related emails to external address | No alerting on new inbox rules with external forwarding |
+| Defence Evasion | Email Hiding Rules | T1564.008 | Delete rule (`..`) removing security alert emails automatically | No alerting on rules that delete emails matching security keywords |
+| Collection | Email Collection: Remote Email Collection | T1114.002 | MailItemsAccessed events from attacker IP across the session | No alerting on mailbox access from new/unusual IPs |
+| Lateral Movement | Internal Spearphishing | T1534 | BEC email sent internally from compromised account to Finance | Intra-org email bypassed external gateway controls entirely |
+| Collection | Data from Cloud Storage | T1530 | Attacker accessed OneDrive and SharePoint files | No alerting on file access from suspicious session context |
+| Resource Development | Obtain Credentials: Purchase | T1589.001 | Credentials likely purchased from infostealer marketplace | Outside org's detection scope, but password hygiene and monitoring for leaked creds could help |
 
 ---
 
