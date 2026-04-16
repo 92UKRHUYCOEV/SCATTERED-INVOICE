@@ -79,7 +79,7 @@ The investigation was conducted using:
 
 - **KQL Queries & Detection Rules (Primary)**  
   Investigation queries were used to identify attacker behavior and later refined into production detection rules.  
-  - `queries` (coming soon)  
+  - [`queries.md`](./queries/queries.md) - KQL Queries
   - [`sentinel-analytics.md`](./detection-rules/sentinel-analytics.md) – Primary detection rules  
 
  - **Automation / SOAR**  
