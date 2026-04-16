@@ -1,273 +1,212 @@
-## Flag-by-Flag Walkthrough
+## Answer-by-Answer Walkthrough
 
 ---
 
 ### Q00 — Workspace Name
-**Flag:** `law-cyber-range`
+**Answer:** `law-cyber-range`
 
-This came straight from the Sentinel UI. The workspace for all the hunt exercises on the Log(N) Pacific CyberRange.
+This was provided from the Sentinel UI workspace.
 
 ---
 
 ### Q01 — Compromised Account
-**Flag:** `m.smith@lognpacific.org`
+**Answer:** `m.smith@lognpacific.org`
 
-I started by filtering SigninLogs for activity related to the reported user, Mark Smith. His UPN showed up immediately.
-
-```kql
-SigninLogs
-| where TimeGenerated between (datetime(2026-02-25T21:00:00Z) .. datetime(2026-02-25T23:00:00Z))
-| where UserPrincipalName has "smith"
-| project TimeGenerated, UserPrincipalName, IPAddress, ResultType
-```
-
-<img width="924" height="246" alt="image" src="https://github.com/user-attachments/assets/de938a27-926e-4a45-836c-d45895164b7c" />
+The investigation began by querying SigninLogs for activity associated with the reported user, Mark Smith. His User Principal Name (UPN) was immediately identified in the results.
 
 ---
 
 ### Q02 — Attacker Source IP
-**Flag:** `205.147.16.190`
+**Answer:** `205.147.16.190`
 
-Filtering Mark's sign-in activity, I spotted an unfamiliar IP appearing at 21:54 with MFA failures followed by a successful authentication. This IP did not match any of Mark's normal sign-in patterns.
-
-```kql
-SigninLogs
-| where UserPrincipalName == "m.smith@lognpacific.org"
-| where TimeGenerated between (datetime(2026-02-25T21:00:00Z) .. datetime(2026-02-25T23:00:00Z))
-| project TimeGenerated, IPAddress, ResultType, Location
-| sort by TimeGenerated asc
-```
-
-<img width="922" height="282" alt="image" src="https://github.com/user-attachments/assets/00b60500-74b0-47dd-a66d-f1ac61b375b3" />
+Review of the user’s sign-in activity identified an unfamiliar IP address at 21:54, which generated multiple MFA failures prior to a successful authentication. This activity was inconsistent with the user’s normal sign-in behavior.
 
 ---
 
 ### Q03 — Attack Origin Country
-**Flag:** `NL`
+**Answer:** `NL`
 
-The Location field on the attacker's sign-in entries showed the Netherlands. A Dutch IP authenticating to a UK organisation's mailbox during an MFA fatigue attack is a strong indicator of compromise.
-
+Analysis of the Location field for the sign-in events identified the Netherlands as the source of authentication. A foreign IP address accessing a UK-based mailbox in conjunction with MFA fatigue activity represents a strong indicator of compromise.
 ---
 
 ### Q04 — MFA Denial Error Code
-**Flag:** `50074`
+**Answer:** `50074`
 
-This is the Azure AD error code for "Strong authentication required." It means the user's credentials were correct but MFA was not completed. The attacker had Mark's password but was being blocked by MFA, which is exactly what you would expect before an MFA fatigue attack.
+This Azure AD error code indicates that strong authentication is required, confirming that valid credentials were used but MFA was not completed. This suggests the attacker had obtained the user’s password but was initially blocked by MFA, consistent with behavior observed prior to an MFA fatigue attack.
 
 ---
 
 ### Q05 — MFA Fatigue Intensity
-**Flag:** `3`
+**Answer:** `3`
 
-I counted 3 failed MFA attempts (ResultType 50074 and 50140) from the attacker's IP before the first successful sign-in. MFA fatigue works by spamming the user with push notifications until they get frustrated and just approve one. Three attempts is not a lot, which could mean Mark approved quickly or the attacker got lucky.
-
+Review of authentication events identified three failed MFA attempts (ResultType 50074 and 50140) originating from the attacker’s IP address prior to a successful sign-in. MFA fatigue attacks commonly involve repeated authentication prompts to induce user approval; the limited number of attempts observed may indicate rapid user approval or successful compromise with minimal interaction.
 ---
 
 ### Q06 — Application Accessed
-**Flag:** `One Outlook Web`
+**Answer:** `One Outlook Web`
 
-The first successful authentication from the attacker's IP was to One Outlook Web. This is the AppDisplayName value from SigninLogs. The attacker went straight for the mailbox, which makes sense for a BEC attack where the goal is to intercept invoice communications.
+The first successful authentication from the attacker’s IP address was to Outlook Web (AppDisplayName in SigninLogs). This indicates the attacker accessed the mailbox immediately after compromise, consistent with BEC activity aimed at intercepting invoice-related communications.
 
 ---
 
 ### Q07 — Attacker OS
-**Flag:** `Linux`
+**Answer:** `Linux`
 
-I pulled this from the DeviceDetail.operatingSystem field in SigninLogs. The attacker was using a Linux machine, which is consistent with Scattered Spider's known tooling. Most corporate users at a law firm would be on Windows or macOS, so a Linux sign-in is another red flag.
+Review of the DeviceDetail.operatingSystem field in SigninLogs indicated that the authentication originated from a Linux-based system. This is inconsistent with the organization’s standard endpoint profile, which primarily consists of Windows and macOS devices. The use of a Linux system in this context represents a significant anomaly and aligns with known adversary tooling, including activity attributed to Scattered Spider.
 
 ---
 
 ### Q08 — Attacker Browser
-**Flag:** `Firefox 147.0`
+**Answer:** `Firefox 147.0`
 
-From DeviceDetail.browser on the attacker's sessions. Combined with Linux, this paints a picture of the attacker's setup.
+Review of the DeviceDetail.browser field in the attacker’s sessions provides further insight into the client environment. When combined with the identified Linux operating system, this information helps profile the attacker’s setup.
 
 ---
 
 ### Q09 — First Post-Auth Action
-**Flag:** `MailItemsAccessed`
+**Answer:** `MailItemsAccessed`
 
-Moving to CloudAppEvents, I filtered for the attacker's IP after the successful sign-in and sorted by time. The first action was MailItemsAccessed, meaning the attacker immediately started reading Mark's emails. This is the reconnaissance phase of the BEC, where they look for ongoing invoice threads to hijack.
-
-```kql
-CloudAppEvents
-| where IPAddress == "205.147.16.190"
-| where TimeGenerated between (datetime(2026-02-25T21:00:00Z) .. datetime(2026-02-25T23:00:00Z))
-| project TimeGenerated, ActionType, Application
-| sort by TimeGenerated asc
-```
+Review of CloudAppEvents, filtered for the attacker’s IP address following successful authentication and sorted by time, identified MailItemsAccessed as the first recorded action. This indicates immediate access to the user’s mailbox. This behavior is characteristic of the reconnaissance phase in BEC attacks, during which adversaries examine email communications to identify and exploit ongoing financial or invoice-related exchanges.
 
 ---
 
 ### Q10 — Rule Creation Method
-**Flag:** `New-InboxRule`
+**Answer:** `New-InboxRule`
 
-The attacker created inbox rules at 22:02 and 22:03. The ActionType in CloudAppEvents was New-InboxRule. Inbox rules are a favourite persistence and evasion technique for BEC attackers because they can silently redirect or delete emails without the victim noticing.
+Analysis of CloudAppEvents identified inbox rule creation events at 22:02 and 22:03, with ActionType New-InboxRule. Inbox rules are a common persistence and defense evasion technique in BEC attacks, enabling attackers to silently redirect or delete emails without the user’s awareness.
 
 ---
 
 ### Q11 — Forward Rule Name
-**Flag:** `.`
+**Answer:** `.`
 
-The first rule was named with just a single dot. This is nearly invisible in the inbox rules list. Most people scrolling through their rules would not even notice it. Very deliberate.
+Analysis revealed that the first inbox rule was assigned a single-character name (“.”), significantly reducing its visibility within the rules interface. This technique is commonly used to evade detection during routine user inspection.
 
 ---
 
 ### Q12 — Forward Destination
-**Flag:** `insights@duck.com`
+**Answer:** `insights@duck.com`
 
-I found this in the ForwardTo parameter within the RawEventData JSON on the inbox rule creation event. The attacker was forwarding copies of emails to a DuckDuckGo email alias, which provides privacy and makes the recipient harder to trace.
+Analysis of the RawEventData JSON for the inbox rule creation event identified the ForwardTo parameter configured with a DuckDuckGo email alias. The use of this privacy-focused service helps obscure the ultimate recipient, making attribution and tracking more difficult.
 
 ---
 
 ### Q13 — Forward Keywords
-**Flag:** `invoice, payment, wire, transfer`
+**Answer:** `invoice, payment, wire, transfer`
 
-The SubjectOrBodyContainsWords parameter in the rule's RawEventData showed exactly what the attacker was after. The rule only forwarded emails containing these financial keywords. This confirms the intent was invoice fraud from the start.
-
-```kql
-CloudAppEvents
-| where IPAddress == "205.147.16.190"
-| where ActionType == "New-InboxRule"
-| extend RawData = parse_json(RawEventData)
-| project TimeGenerated, ActionType, RawData
-```
-
-<img width="914" height="188" alt="image" src="https://github.com/user-attachments/assets/ee131f66-9a7e-42bb-b7b6-d7d590f4c4cb" />
+Analysis of the SubjectOrBodyContainsWords parameter within the rule’s RawEventData identified financial keywords used to selectively forward emails. This targeted filtering confirms the attacker’s intent to intercept invoice-related communications, consistent with BEC fraud activity.
 
 ---
 
 ### Q14 — Rule Processing Flag
-**Flag:** `StopProcessingRules`
+**Answer:** `StopProcessingRules`
 
-This parameter was set on the attacker's forwarding rule. What it does is tell Exchange to stop evaluating any other inbox rules after this one fires. So if the victim had their own rules that might have caught or flagged the forwarded emails, those rules would never run. Another layer of evasion.
-
-<img width="922" height="448" alt="image" src="https://github.com/user-attachments/assets/c5a3873b-2996-4c8c-907d-d85c49c8db14" />
+This parameter was configured within the attacker’s forwarding rule to stop the evaluation of subsequent inbox rules once triggered. This prevents any legitimate user-defined rules from executing, effectively bypassing potential detection mechanisms and adding an additional layer of defense evasion.
 
 ---
 
 ### Q15 — Delete Rule Name
-**Flag:** `..`
+**Answer:** `..`
 
-The second rule was named with two dots. If the first rule (single dot) was hard to spot, this one is even sneakier sitting right next to it. This rule was designed to automatically delete security-related notifications.
+Analysis identified a second inbox rule named using two dots (“..”), significantly reducing its visibility within the rules interface, especially in proximity to the first rule. The rule was configured to automatically delete security-related notifications, reflecting a deliberate defense evasion strategy.
 
 ---
 
 ### Q16 — Delete Keywords
-**Flag:** `suspicious, security, phishing, unusual, compromised, verify`
+**Answer:** `suspicious, security, phishing, unusual, compromised, verify`
 
-These are the keywords the delete rule was targeting. Any email containing these words would be automatically deleted from Mark's inbox. The purpose is obvious: if the security team or Microsoft sends Mark a warning about suspicious activity on his account, he would never see it. The attacker was covering their tracks in real time.
+Review of the rule configuration identified keywords used to selectively delete emails from the user’s inbox. Any messages containing these terms, including potential security alerts, would be automatically removed. This indicates a deliberate attempt to suppress detection mechanisms and conceal malicious activity in real time.
 
 ---
 
 ### Q17 — BEC Target
-**Flag:** `j.reynolds@lognpacific.org`
+**Answer:** `j.reynolds@lognpacific.org`
 
-Moving to EmailEvents, I filtered for emails sent from the attacker's IP during the investigation window. The recipient was j.reynolds, who based on the scenario context works in Finance. The attacker specifically targeted someone with the authority to process wire transfers.
-
-```kql
-EmailEvents
-| where SenderIPv4 == "205.147.16.190"
-| where TimeGenerated between (datetime(2026-02-25T21:00:00Z) .. datetime(2026-02-25T23:00:00Z))
-| project TimeGenerated, SenderFromAddress, RecipientEmailAddress, Subject
-```
-
-<img width="923" height="214" alt="image" src="https://github.com/user-attachments/assets/c43ea386-fe77-4b56-9e22-fc61ac4797ca" />
+Analysis of EmailEvents, filtered for emails sent from the attacker’s IP address during the investigation window, identified j.reynolds as the recipient. Based on the scenario context, this user is part of the Finance team, indicating the attacker deliberately targeted an individual with authority to process financial transactions, consistent with BEC activity.
 
 ---
 
 ### Q18 — BEC Subject Line
-**Flag:** `RE: Invoice #INV-2026-0892 - Updated Banking Details`
+**Answer:** `RE: Invoice #INV-2026-0892 - Updated Banking Details`
 
-The subject line starts with "RE:" which means the attacker was replying to an existing invoice thread. This is a thread hijack. By replying within a legitimate conversation, the email looks completely normal to the recipient. J. Reynolds would see what appears to be Mark following up on a real invoice, not a fraudulent message from an attacker.
+Analysis of the subject line, which begins with “RE:”, indicates that the attacker replied within an existing email thread. This technique, known as thread hijacking, leverages legitimate conversation context to enhance credibility, causing the message to appear as a genuine continuation rather than a malicious communication.
 
 ---
 
 ### Q19 — Email Direction
-**Flag:** `Intra-org`
+**Answer:** `Intra-org`
 
-This is a critical finding. The email was classified as internal (intra-org) because it was sent from Mark's compromised account to another internal user. This means any email gateway rules designed to catch external phishing or BEC would not have flagged it. The attacker was operating from inside the trust boundary.
-
-<img width="925" height="265" alt="image" src="https://github.com/user-attachments/assets/5763a5a4-e9f7-403d-b2bc-82af193196dd" />
+This represents a critical finding. The email was classified as intra-organizational (intra-org), as it was sent from a compromised internal account to another internal user. As a result, email gateway controls designed to detect external phishing or BEC activity were not triggered, allowing the attacker to operate within the organization’s trust boundary.
 
 ---
 
 ### Q20 — BEC Sender IP
-**Flag:** `205.147.16.190`
+**Answer:** `205.147.16.190`
 
-The SenderIPv4 on the BEC email matched the attacker's sign-in IP exactly. This confirms the fraudulent email was sent from the same session the attacker established through MFA fatigue. One session, one attacker, full chain from initial access to the BEC.
+Analysis confirmed that the SenderIPv4 address on the BEC email matched the attacker’s sign-in IP address. This verifies that the fraudulent email was sent from the same session established via MFA fatigue, demonstrating a complete attack chain from initial access through BEC execution.
 
 ---
 
 ### Q21 — Cloud App Accessed
-**Flag:** `Microsoft OneDrive for Business`
+**Answer:** `Microsoft OneDrive for Business`
 
-The attacker did not stop at email. I found FileAccessed events in CloudAppEvents from the attacker's IP. The Application field showed Microsoft OneDrive for Business. The attacker was browsing Mark's files, possibly looking for more financial information, contracts, or other data they could use.
+Analysis of CloudAppEvents identified FileAccessed events originating from the attacker’s IP address, with the Application field indicating Microsoft OneDrive for Business. This confirms the attacker accessed the user’s cloud-stored files, suggesting an effort to identify additional financial information, contracts, or other sensitive data for further exploitation.
 
 ---
 
 ### Q22 — SharePoint App Accessed
-**Flag:** `Microsoft SharePoint Online`
+**Answer:** `Microsoft SharePoint Online`
 
-This one caught me out initially. I tried several values from SigninLogs (Office 365 SharePoint Online, SharePoint Online Web Client Extensibility, OfficeHome) and they were all wrong. The answer was in the Application field in CloudAppEvents, which logs it as "Microsoft SharePoint Online" rather than the SigninLogs AppDisplayName of "Office 365 SharePoint Online." Lesson learned: always check which table the question is pointing to, because the same service can have different display names across tables.
+This finding highlights the importance of referencing the correct telemetry source during analysis. Initial attempts using values from SigninLogs (e.g., "Office 365 SharePoint Online," "SharePoint Online Web Client Extensibility," and "OfficeHome") did not produce the expected result. The correct value was identified in the Application field of CloudAppEvents, where the service is recorded as "Microsoft SharePoint Online." This illustrates how service naming can vary across log sources and reinforces the need to validate the appropriate table when conducting investigations.
 
 ---
 
 ### Q23 — Session Correlation
-**Flag:** `00225cfa-a0ff-fb46-a079-5d152fcdf72a`
+**Answer:** `00225cfa-a0ff-fb46-a079-5d152fcdf72a`
 
-This GUID ties the entire investigation together. I found it by parsing the RawEventData on the inbox rule creation events in CloudAppEvents and extracting AppAccessContext.AADSessionId. I then confirmed it matched the SessionId on the attacker's successful sign-in in SigninLogs. One session ID linking sign-ins, inbox rule creation, email access, and file browsing.
-
-```kql
-CloudAppEvents
-| where IPAddress == "205.147.16.190"
-| where ActionType == "New-InboxRule"
-| extend RawData = parse_json(RawEventData)
-| extend AADSessionId = tostring(RawData.AppAccessContext.AADSessionId)
-| project TimeGenerated, ActionType, AADSessionId
-```
+This GUID serves as a key correlation artifact for the investigation. It was extracted from the RawEventData of inbox rule creation events in CloudAppEvents via AppAccessContext.AADSessionId and matched to the SessionId from the attacker’s successful sign-in in SigninLogs. This linkage ties authentication, inbox rule creation, email access, and file activity to a single attacker session.
 
 ---
 
 ### Q24 — Conditional Access Status
-**Flag:** `notApplied`
+**Answer:** `notApplied`
 
-The IR Lead asked what failed in the defences. The ConditionalAccessStatus on the attacker's successful sign-in was "notApplied," meaning no Conditional Access policies evaluated or blocked the sign-in. A policy requiring managed devices or blocking risky locations (like a Dutch IP signing into a UK org) would have stopped this attack at the door. This is the single biggest defence gap in this incident.
+Analysis of the attacker’s successful sign-in revealed a ConditionalAccessStatus of “notApplied,” indicating that no Conditional Access policies were evaluated or enforced. This represents a critical defensive gap. The implementation of policies requiring managed devices or restricting access from anomalous locations—such as a foreign IP authenticating to a UK-based organization—could have prevented the attack at the initial access stage.
 
 ---
 
 ### Q25 — MFA Fatigue MITRE ID
-**Flag:** `T1621`
+**Answer:** `T1621`
 
-This maps to MITRE ATT&CK T1621: Multi-Factor Authentication Request Generation. The technique describes exactly what happened here: the attacker repeatedly triggered MFA push notifications to wear down the user until they approved one.
+This activity aligns with MITRE ATT&CK technique T1621: Multi-Factor Authentication Request Generation. The repeated MFA push notifications observed are consistent with MFA fatigue tactics, intended to prompt user approval through persistent requests.
 
 ---
 
 ### Q26 — Email Rules MITRE ID
-**Flag:** `T1564.008`
+**Answer:** `T1564.008`
 
-This maps to T1564.008: Hide Artifacts — Email Hiding Rules. The attacker created inbox rules specifically to hide evidence of the compromise by forwarding financial emails out and deleting security alerts. This falls under Defence Evasion in the ATT&CK framework.
+This activity aligns with MITRE ATT&CK technique T1564.008: Hide Artifacts — Email Hiding Rules. The attacker created inbox rules to forward financial communications externally and delete security-related notifications, effectively concealing evidence of compromise. This behavior falls under the Defense Evasion tactic within the ATT&CK framework.
 
 ---
 
 ### Q27 — Credential Source
-**Flag:** `infostealer`
+**Answer:** `infostealer`
 
-The IR Lead asked how the attacker already had Mark's password before the MFA fatigue started. Scattered Spider is well known for purchasing credentials harvested by infostealer malware. Tools like Raccoon, RedLine, and Vidar steal saved passwords, session tokens, and browser data from infected machines, and the logs are sold on dark web marketplaces. The attacker likely bought Mark's credentials from one of these sources.
+The presence of valid credentials prior to the MFA fatigue activity indicates that the attacker had already obtained the user’s password. Scattered Spider is known to leverage credentials harvested by infostealer malware, such as Raccoon, RedLine, and Vidar, which collect stored passwords, session tokens, and browser data from compromised systems. These data sets are frequently sold on underground marketplaces, making it likely the credentials were acquired through this method.
 
 ---
 
 ### Q28 — Immediate Containment
-**Flag:** `revoke sessions`
+**Answer:** `revoke sessions`
 
-The IR Lead wanted to know the single most important containment action. The attacker still had a valid session and the inbox rules were still active. Revoking sessions invalidates all active tokens immediately, kicking the attacker out. A password reset alone would not kill existing session tokens, so revoking sessions had to come first.
+The most critical containment action was the immediate revocation of all active user sessions. The attacker maintained a valid session and persistence through malicious inbox rules, enabling continued access. Session revocation invalidates all active authentication tokens, effectively removing the attacker’s access. A password reset alone would not terminate existing sessions, making session revocation the priority containment step.
 
 ---
 
 ### Q29 — Threat Actor Attribution
-**Flag:** `Scattered Spider`
+**Answer:** `Scattered Spider`
 
-Everything in this investigation points to Scattered Spider. MFA fatigue as the initial access method, purchasing credentials from infostealer logs, inbox rule manipulation for persistence and evasion, BEC targeting finance, and the use of anonymising infrastructure. This is the same group that targeted MGM Resorts and Caesars Entertainment using very similar TTPs.
+The observed activity aligns with tactics, techniques, and procedures commonly attributed to the Scattered Spider threat group. This includes MFA fatigue as the initial access method, the use of credentials likely sourced from infostealer malware, inbox rule manipulation for persistence and defense evasion, targeted BEC activity against finance personnel, and the use of anonymizing infrastructure. These patterns are consistent with publicly reported Scattered Spider campaigns, including those involving MGM Resorts and Caesars Entertainment.
 
 ---
 
