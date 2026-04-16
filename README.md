@@ -51,7 +51,7 @@ The investigation was conducted using:
   
 ## Attack Flow (Kill Chain)
 <p align="leftr">
-  <img src="attack-diagram.png" width="70%">
+  <img src="attack-diagram_CROP.png" width="70%">
 </p>
 ### Figure 1 – BEC Attack Kill Chain
 
@@ -79,11 +79,11 @@ The investigation was conducted using:
 
 - **KQL Queries & Primary Detection Rules**  
   Investigation queries were used to identify attacker behavior and later refined into production detection rules.  
-  - ## [`queries.md`](./queries/queries.md) - KQL Queries
-  - ## [`sentinel-analytics.md`](./detection-rules/sentinel-analytics.md) – Primary detection rules.
+  - ### [`queries.md`](./queries/queries.md) - KQL Queries
+  - ### [`sentinel-analytics.md`](./detection-rules/sentinel-analytics.md) – Primary detection rules.
 
  - **Automation / SOAR**  
- - ## [playbooks.md](./automation/playbooks.md) SOAR playbooks automate security operations, enabling quicker response times to incidents.  
+ - ### [playbooks.md](./automation/playbooks.md) SOAR playbooks automate security operations, enabling quicker response times to incidents.  
 
 ---
 
