@@ -27,6 +27,7 @@ Review of the user’s sign-in activity identified an unfamiliar IP address at 2
 **Answer:** `NL`
 
 Analysis of the Location field for the sign-in events identified the Netherlands as the source of authentication. A foreign IP address accessing a UK-based mailbox in conjunction with MFA fatigue activity represents a strong indicator of compromise.
+
 ---
 
 ### Q04 — MFA Denial Error Code
@@ -40,6 +41,7 @@ This Azure AD error code indicates that strong authentication is required, confi
 **Answer:** `3`
 
 Review of authentication events identified three failed MFA attempts (ResultType 50074 and 50140) originating from the attacker’s IP address prior to a successful sign-in. MFA fatigue attacks commonly involve repeated authentication prompts to induce user approval; the limited number of attempts observed may indicate rapid user approval or successful compromise with minimal interaction.
+
 ---
 
 ### Q06 — Application Accessed
