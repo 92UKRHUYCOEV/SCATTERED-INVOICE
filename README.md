@@ -73,20 +73,26 @@ The investigation was conducted using:
 
 ---
 
+
 ## 🔎 Detection & Analysis
 
 ### Key Artifacts
 
-- **KQL Queries & Primary Detection Rules**  
-  - ### [`queries.md`](./queries/queries.md)   KQL Queries used to identify attacker behavior, refined into production detection rules.
-  - ### [`sentinel-analytics.md`](./detection-rules/sentinel-analytics.md)   Primary detection rules.
+- **KQL Queries & Detection Engineering**
+  - [`queries.md`](./queries/queries.md)  
+    KQL queries used during the investigation to identify attacker behavior, later refined into production detection rules.
 
- - **Automation / SOAR**  
- - ### [playbooks.md](./automation/playbooks.md)   SOAR playbooks automate security operations, enabling quicker response times to incidents.  
+  - [`sentinel-analytics.md`](./detection-rules/sentinel-analytics.md)  
+    Primary detection rules developed for Microsoft Sentinel analytics.
+
+### ⚙️ Automation / SOAR
+
+- [`playbooks.md`](./automation/playbooks.md)  
+  SOAR playbooks designed to automate security operations and enable faster, more consistent incident response.
 
 ---
 
-## Flag Summary
+## Solution Summary
 
 | # | Question | Answer |
 |---|----------|------|
@@ -123,7 +129,7 @@ The investigation was conducted using:
 
 ---
 
-🚨 Detection Capabilities
+#🚨 Detection Capabilities
 
 ## 🧠 MITRE ATT&CK Mapping
 
