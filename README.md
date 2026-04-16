@@ -78,18 +78,17 @@ The investigation was conducted using:
 ### Key Artifacts
 
 - **KQL Queries & Primary Detection Rules**  
-  Investigation queries were used to identify attacker behavior and later refined into production detection rules.  
-  - ### [`queries.md`](./queries/queries.md) - KQL Queries
-  - ### [`sentinel-analytics.md`](./detection-rules/sentinel-analytics.md) – Primary detection rules.
+  - ### [`queries.md`](./queries/queries.md)   KQL Queries used to identify attacker behavior, refined into production detection rules.
+  - ### [`sentinel-analytics.md`](./detection-rules/sentinel-analytics.md)   Primary detection rules.
 
  - **Automation / SOAR**  
- - ### [playbooks.md](./automation/playbooks.md) SOAR playbooks automate security operations, enabling quicker response times to incidents.  
+ - ### [playbooks.md](./automation/playbooks.md)   SOAR playbooks automate security operations, enabling quicker response times to incidents.  
 
 ---
 
 ## Flag Summary
 
-| # | Question | Flag |
+| # | Question | Answer |
 |---|----------|------|
 | Q00 | Workspace name | `law-cyber-range` |
 | Q01 | Compromised account | `m.smith@lognpacific.org` |
@@ -126,14 +125,23 @@ The investigation was conducted using:
 
 🚨 Detection Capabilities
 
-This project includes:
+## 🧠 MITRE ATT&CK Mapping
 
-- MFA fatigue detection (T1621)
-- Inbox rule persistence detection (T1564.008)
-- Email exfiltration monitoring (T1114)
-- BEC fraud detection (T1566)
-- Post-compromise data access detection (T1213)
-- Session-based attack correlation (T1078)
+| Attack Phase         | Technique                             | ID        | Activity Observed                                                                 | Detection Gap                                                                     |
+| -------------------- | ------------------------------------- | --------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Initial Access       | Valid Accounts: Cloud Accounts        | T1078.004 | Compromised credentials were used to successfully authenticate to the environment | No detection for anomalous sign-ins based on location, device, or risk signals    |
+| Initial Access       | MFA Request Generation                | T1621     | Multiple MFA push notifications were sent prior to user approval                  | No detection for repeated MFA denials followed by a successful authentication     |
+| Persistence          | Email Forwarding Rule                 | T1114.003 | Malicious inbox rule created to forward invoice-related emails externally         | No alerting on inbox rules configured with external forwarding destinations       |
+| Defense Evasion      | Email Hiding Rules                    | T1564.008 | Inbox rule created to automatically delete security-related emails                | No detection for rules that suppress or delete security or alert-related emails   |
+| Collection           | Email Collection: Remote Email Access | T1114.002 | Mailbox accessed remotely from attacker-controlled IP during active session       | No alerting on mailbox access from unfamiliar or anomalous IP addresses           |
+| Lateral Movement     | Internal Spearphishing                | T1534     | Fraudulent email sent internally to finance personnel from compromised account    | Internal email traffic bypassed traditional email security controls               |
+| Collection           | Data from Cloud Storage               | T1530     | Files accessed from OneDrive and SharePoint following account compromise          | No detection for suspicious file access tied to anomalous session activity        |
+| Resource Development | Obtain Credentials: Purchase          | T1589.001 | Credentials likely sourced from external infostealer marketplace                  | Limited visibility into credential exposure; no monitoring for leaked credentials |
+
+These findings highlight multiple gaps across identity, email, and cloud telemetry, emphasizing the need for improved detection coverage and correlation across attack stages.
+
+
+---
 
 All detections are:
 
@@ -151,8 +159,7 @@ SOAR playbooks were developed to:
 - Remove malicious inbox rules
 - Purge fraudulent emails
 - Notify SOC and affected users
-- Enrich incidents with correlated activity
--- See: /automation/playbooks.md
+- Augment incidents with correlated telemetry to improve contextual analysis.
 
 ---
 
@@ -165,22 +172,7 @@ SOAR playbooks were developed to:
 - sentinel-analytics.md – Primary detection reference
 -- /automation
 - SOAR playbooks and response workflows
--- /docs  Final incident report and documentation
-
----
-
-## MITRE ATT&CK Mapping
-
-| Attack Phase | Technique | ID | What Happened | Detection Gap |
-|---|---|---|---|---|
-| Initial Access | Valid Accounts: Cloud Accounts | T1078.004 | Attacker used Mark's stolen credentials to authenticate | No alerting on sign-ins from anomalous locations or devices |
-| Initial Access | MFA Request Generation | T1621 | 3 MFA push spam attempts before user approved | No detection for repeated MFA denials followed by approval |
-| Persistence | Email Forwarding Rule | T1114.003 | Forward rule (`.`) sending invoice-related emails to external address | No alerting on new inbox rules with external forwarding |
-| Defence Evasion | Email Hiding Rules | T1564.008 | Delete rule (`..`) removing security alert emails automatically | No alerting on rules that delete emails matching security keywords |
-| Collection | Email Collection: Remote Email Collection | T1114.002 | MailItemsAccessed events from attacker IP across the session | No alerting on mailbox access from new/unusual IPs |
-| Lateral Movement | Internal Spearphishing | T1534 | BEC email sent internally from compromised account to Finance | Intra-org email bypassed external gateway controls entirely |
-| Collection | Data from Cloud Storage | T1530 | Attacker accessed OneDrive and SharePoint files | No alerting on file access from suspicious session context |
-| Resource Development | Obtain Credentials: Purchase | T1589.001 | Credentials likely purchased from infostealer marketplace | Outside org's detection scope, but password hygiene and monitoring for leaked creds could help |
+-- Incident report and documentation
 
 ---
 
@@ -206,10 +198,3 @@ This investigation highlights how modern attackers:
 
 Effective detection requires correlating identity, email, and cloud activity, not relying on a single data source.
 
-
-
-
-
-
-- `/queries` → KQL queries used during investigation  
-- `/docs` → Final incident reports and documentation (placeholder)
