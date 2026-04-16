@@ -77,13 +77,13 @@ The investigation was conducted using:
 
 ### Key Artifacts
 
-- **KQL Queries & Detection Rules (Primary)**  
+- **KQL Queries & Primary Detection Rules**  
   Investigation queries were used to identify attacker behavior and later refined into production detection rules.  
-  - [`queries.md`](./queries/queries.md) - KQL Queries
-  - [`sentinel-analytics.md`](./detection-rules/sentinel-analytics.md) – Primary detection rules  
+  - # [`queries.md`](./queries/queries.md) - KQL Queries
+  - # [`sentinel-analytics.md`](./detection-rules/sentinel-analytics.md) – Primary detection rules  
 
  - **Automation / SOAR**  
-  See [playbooks.md](./automation/playbooks.md) for response playbooks  
+ - #[playbooks.md](./automation/playbooks.md) for response playbooks  
 
 ---
 
