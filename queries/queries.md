@@ -42,14 +42,14 @@ SigninLogs
 | project TimeGenerated, IPAddress, ResultType, Location
 | sort by TimeGenerated asc
 
-<img width="1033" height="262" alt="image" src="https://github.com/user-attachments/assets/dfd23536-bde3-4cdb-a7a2-ecba81a1f620" />
+<img width="800" height="175" alt="image" src="https://github.com/user-attachments/assets/dfd23536-bde3-4cdb-a7a2-ecba81a1f620" />
 
 ---
 
 ### Q05 MFA Fatigue Intensity
 **Answer:** `3`
 
-<img width="1348" height="606" alt="image" src="https://github.com/user-attachments/assets/01c2368a-0484-4f23-b445-dda062705ee6" />
+<img width="900" height="300" alt="image" src="https://github.com/user-attachments/assets/01c2368a-0484-4f23-b445-dda062705ee6" />
 
 
 
@@ -60,7 +60,7 @@ Review of authentication activity identified three failed MFA attempts (ResultTy
 ### Q06 Application Accessed
 **Answer:** `One Outlook Web`
 
-<img width="1293" height="492" alt="image" src="https://github.com/user-attachments/assets/0b2bd19d-3d0d-47cf-b6e1-1117b65dea15" />
+<img width="1100" height="492" alt="image" src="https://github.com/user-attachments/assets/0b2bd19d-3d0d-47cf-b6e1-1117b65dea15" />
 
 
 
@@ -275,7 +275,15 @@ The most critical containment action was the immediate revocation of all active 
 ### Q29 Threat Actor Attribution
 **Answer:** `Scattered Spider`
 
-The observed activity aligns with tactics, techniques, and procedures commonly attributed to the Scattered Spider threat group. This includes MFA fatigue as the initial access method, the use of credentials likely sourced from infostealer malware, inbox rule manipulation for persistence and defense evasion, targeted BEC activity against finance personnel, and the use of anonymizing infrastructure. These patterns are consistent with publicly reported Scattered Spider campaigns, including those involving MGM Resorts and Caesars Entertainment.
+Based on the observed tactics, techniques, and procedures (TTPs), the activity identified in this investigation is consistent with the threat group commonly referred to as **Scattered Spider**.
+
+The attack chain began with the use of valid credentials followed by repeated MFA push attempts, indicative of an MFA fatigue technique (MITRE ATT&CK T1621). Following successful authentication, the attacker established persistence and evaded detection through the creation of malicious inbox rules, including external forwarding and automated deletion of security-related emails (T1114.003, T1564.008).
+
+Subsequent activity included unauthorized mailbox access, internal spearphishing targeting finance personnel, and attempts to manipulate invoice-related communications, consistent with Business Email Compromise (BEC) objectives (T1534). Additional indicators, such as the use of anonymizing infrastructure and non-standard client environments, further support this assessment.
+
+These behaviors closely align with publicly reported campaigns attributed to Scattered Spider, including high-profile intrusions involving MGM Resorts and Caesars Entertainment, which leveraged similar techniques including MFA fatigue, credential acquisition from infostealer logs, and post-compromise abuse of cloud-based email services.
+
+While definitive attribution cannot be established based solely on available telemetry, the strong alignment of observed TTPs provides a high-confidence assessment that this activity is consistent with Scattered Spider operations.
 
 ---
 
