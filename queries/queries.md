@@ -35,24 +35,45 @@ Analysis of the Location field for the sign-in events identified the Netherlands
 
 This Azure AD error code indicates that strong authentication is required, confirming that valid credentials were used but MFA was not completed. This suggests the attacker had obtained the user’s password but was initially blocked by MFA, consistent with behavior observed prior to an MFA fatigue attack.
 
+SigninLogs
+| where UserPrincipalName == "m.smith@lognpacific.org"
+| where TimeGenerated between (datetime(2026-02-25T21:00:00Z) .. datetime(2026-02-25T23:00:00Z))
+| where ResultType != "0"
+| project TimeGenerated, IPAddress, ResultType, Location
+| sort by TimeGenerated asc
+
+<img width="1033" height="262" alt="image" src="https://github.com/user-attachments/assets/dfd23536-bde3-4cdb-a7a2-ecba81a1f620" />
+
 ---
 
 ### Q05 — MFA Fatigue Intensity
 **Answer:** `3`
 
-Review of authentication events identified three failed MFA attempts (ResultType 50074 and 50140) originating from the attacker’s IP address prior to a successful sign-in. MFA fatigue attacks commonly involve repeated authentication prompts to induce user approval; the limited number of attempts observed may indicate rapid user approval or successful compromise with minimal interaction.
+<img width="1348" height="606" alt="image" src="https://github.com/user-attachments/assets/01c2368a-0484-4f23-b445-dda062705ee6" />
+
+
+
+Review of authentication activity identified three failed MFA attempts (ResultType 50074 and 50140) originating from the attacker’s IP address prior to a successful sign-in. MFA fatigue attacks commonly involve repeated authentication prompts to induce user approval; the small number of attempts observed may indicate rapid user approval or successful compromise with minimal interaction.
 
 ---
 
 ### Q06 — Application Accessed
 **Answer:** `One Outlook Web`
 
-The first successful authentication from the attacker’s IP address was to Outlook Web (AppDisplayName in SigninLogs). This indicates the attacker accessed the mailbox immediately after compromise, consistent with BEC activity aimed at intercepting invoice-related communications.
+<img width="1293" height="492" alt="image" src="https://github.com/user-attachments/assets/0b2bd19d-3d0d-47cf-b6e1-1117b65dea15" />
+
+
+
+The first successful authentication from the attacker’s IP address was to Outlook Web (AppDisplayName in SigninLogs). This indicates immediate mailbox access following compromise, consistent with BEC activity aimed at intercepting invoice-related communications.
 
 ---
 
 ### Q07 — Attacker OS
 **Answer:** `Linux`
+
+<img width="1190" height="642" alt="image" src="https://github.com/user-attachments/assets/b0f08267-a53c-4f9b-8215-32c90cacd147" />
+
+
 
 Review of the DeviceDetail.operatingSystem field in SigninLogs indicated that the authentication originated from a Linux-based system. This is inconsistent with the organization’s standard endpoint profile, which primarily consists of Windows and macOS devices. The use of a Linux system in this context represents a significant anomaly and aligns with known adversary tooling, including activity attributed to Scattered Spider.
 
@@ -67,6 +88,15 @@ Review of the DeviceDetail.browser field in the attacker’s sessions provides f
 
 ### Q09 — First Post-Auth Action
 **Answer:** `MailItemsAccessed`
+
+CloudAppEvents
+| where IPAddress == "205.147.16.190"
+| where TimeGenerated between (datetime(2026-02-25T21:00:00Z) .. datetime(2026-02-25T23:00:00Z))
+| project TimeGenerated, ActionType, Application
+| sort by TimeGenerated asc
+
+<img width="959" height="138" alt="image" src="https://github.com/user-attachments/assets/4f4695de-997e-4842-97b2-50327ec293ee" />
+
 
 Review of CloudAppEvents, filtered for the attacker’s IP address following successful authentication and sorted by time, identified MailItemsAccessed as the first recorded action. This indicates immediate access to the user’s mailbox. This behavior is characteristic of the reconnaissance phase in BEC attacks, during which adversaries examine email communications to identify and exploit ongoing financial or invoice-related exchanges.
 
@@ -96,6 +126,12 @@ Analysis of the RawEventData JSON for the inbox rule creation event identified t
 ### Q13 — Forward Keywords
 **Answer:** `invoice, payment, wire, transfer`
 
+CloudAppEvents
+| where IPAddress == "205.147.16.190"
+| where ActionType == "New-InboxRule"
+| extend RawData = parse_json(RawEventData)
+| project TimeGenerated, ActionType, RawData
+
 Analysis of the SubjectOrBodyContainsWords parameter within the rule’s RawEventData identified financial keywords used to selectively forward emails. This targeted filtering confirms the attacker’s intent to intercept invoice-related communications, consistent with BEC fraud activity.
 
 ---
@@ -124,6 +160,14 @@ Review of the rule configuration identified keywords used to selectively delete 
 ### Q17 — BEC Target
 **Answer:** `j.reynolds@lognpacific.org`
 
+EmailEvents 
+| where TimeGenerated between (datetime(2026-02-25T21:00:00Z) .. datetime(2026-02-25T23:00:00Z))
+| where SenderFromAddress endswith "@lognpacific.org" 
+| where Subject has_any ("invoice", "payment", "wire", "transfer") 
+| project TimeGenerated, SenderFromAddress, RecipientEmailAddress, Subject
+
+<img width="1531" height="229" alt="image" src="https://github.com/user-attachments/assets/ce6ab3f2-7056-4e5b-81f7-02f5187b93b5" />
+
 Analysis of EmailEvents, filtered for emails sent from the attacker’s IP address during the investigation window, identified j.reynolds as the recipient. Based on the scenario context, this user is part of the Finance team, indicating the attacker deliberately targeted an individual with authority to process financial transactions, consistent with BEC activity.
 
 ---
@@ -137,6 +181,9 @@ Analysis of the subject line, which begins with “RE:”, indicates that the at
 
 ### Q19 — Email Direction
 **Answer:** `Intra-org`
+
+<img width="1287" height="508" alt="image" src="https://github.com/user-attachments/assets/3df1ddf9-503d-4807-9633-e314368ee6c8" />
+
 
 This represents a critical finding. The email was classified as intra-organizational (intra-org), as it was sent from a compromised internal account to another internal user. As a result, email gateway controls designed to detect external phishing or BEC activity were not triggered, allowing the attacker to operate within the organization’s trust boundary.
 
