@@ -49,7 +49,7 @@ SigninLogs
 ### Q05 MFA Fatigue Intensity
 **Answer:** `3`
 
-<img width="900" height="300" alt="image" src="https://github.com/user-attachments/assets/01c2368a-0484-4f23-b445-dda062705ee6" />
+<img width="1000" height="400" alt="image" src="https://github.com/user-attachments/assets/01c2368a-0484-4f23-b445-dda062705ee6" />
 
 
 
@@ -60,7 +60,7 @@ Review of authentication activity identified three failed MFA attempts (ResultTy
 ### Q06 Application Accessed
 **Answer:** `One Outlook Web`
 
-<img width="1100" height="492" alt="image" src="https://github.com/user-attachments/assets/0b2bd19d-3d0d-47cf-b6e1-1117b65dea15" />
+<img width="1100" height="400" alt="image" src="https://github.com/user-attachments/assets/0b2bd19d-3d0d-47cf-b6e1-1117b65dea15" />
 
 
 
