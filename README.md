@@ -77,47 +77,52 @@ The investigation was conducted using:
 
 ---
 
-
 ## 🔎 Detection & Analysis
 
 ### Key Artifacts
 
-- **KQL Queries & Detection Engineering**
-  - [`queries.md`](./queries/queries.md)  
-    KQL queries used during the investigation to identify attacker behavior, later refined into production detection rules.
+- **KQL Queries**  
+  [`queries.md`](./queries/queries.md)  
+  Used during the investigation to identify attacker behavior, later refined into production detection rules.
 
-  - [`sentinel-analytics.md`](./detection-rules/sentinel-analytics.md)  
-    Primary detection rules developed for Microsoft Sentinel analytics.
+- **Detection Engineering**  
+  [`sentinel-analytics.md`](./detection-rules/sentinel-analytics.md)  
+  Primary detection rules developed for Microsoft Sentinel analytics.
 
-### ⚙️ Automation / SOAR
-
-- [`playbooks.md`](./automation/playbooks.md)  
+- **Automation / SOAR**  
+  [`playbooks.md`](./automation/playbooks.md)  
   SOAR playbooks designed to automate security operations and enable faster, more consistent incident response.
 
 ---
 
-End-to-End Detection Flow
+## 📊 Detection Flow
 
-1. User Authentication
-   → Successful login using valid credentials
+1. **User Authentication**  
+   Successful login using valid credentials  
 
-2. Authentication Control Failure
-   → MFA expected but not enforced (bypass)
+2. **Authentication Control Failure**  
+   MFA expected but not enforced  
 
-3. Identity Manipulation
-   → MFA method reset or modification detected
+3. **Identity Manipulation**  
+   MFA method reset or modification detected  
 
-4. Post-Authentication Expansion
-   → Access to multiple applications and IP addresses
+4. **Post-Authentication Expansion**  
+   Access to multiple applications and IP addresses  
 
-5. Anomalous Activity
-   → Geographic inconsistency (impossible travel)
+5. **Anomalous Activity**  
+   Geographic inconsistency (impossible travel)  
 
-6. Detection Trigger
-   → Risk score threshold exceeded (Score ≥ 6)
+6. **Detection Trigger**  
+   Risk score threshold exceeded (Score ≥ 6)  
 
-7. Automated Response
-   → SOAR playbook executed (account containment and session revocation)
+7. **Automated Response**  
+   SOAR playbook executed (account containment and session revocation)
+
+## 📊 Detection Flow Diagram
+
+<p align="left">
+<img width="700" height="250" alt="detection-flow-mfa-bypass_crop2" src="https://github.com/user-attachments/assets/b0b293d7-7c66-4eae-994c-6a3b4d41b3c5" />
+</p>
 
 ## Solution Summary
 
@@ -156,8 +161,6 @@ End-to-End Detection Flow
 
 ---
 
-#🚨 Detection Capabilities
-
 ## 🧠 MITRE ATT&CK Mapping
 
 | Attack Phase         | Technique                             | ID        | Activity Observed                                                                 | Detection Gap                                                                     |
@@ -184,7 +187,7 @@ All detections are:
   
 ---
 
-⚙️ Automation & Response
+Automation & Response
 
 SOAR playbooks were developed to:
 
@@ -196,20 +199,15 @@ SOAR playbooks were developed to:
 
 ---
 
-📁 Project Structure
+Project Structure
 
-- /queries
--- KQL queries used during investigation
-- /detection-rules
--- Microsoft Sentinel analytics rules
-- sentinel-analytics.md – Primary detection reference
--- /automation
-- SOAR playbooks and response workflows
--- Incident report and documentation
+- /queries  KQL queries used during investigation
+- /detection-rules  Microsoft Sentinel analytics rules
+- sentinel-analytics.md  Primary detection reference SOAR playbooks and response workflows
 
 ---
 
-🏆 Skills Demonstrated
+Skills Demonstrated
 
 - Security Incident Investigation (SOC)
 - Microsoft Sentinel & KQL
@@ -220,7 +218,7 @@ SOAR playbooks were developed to:
 
 ---
 
-🧠 Key Insight
+Key Insight
 
 This investigation highlights how modern attackers:
 
