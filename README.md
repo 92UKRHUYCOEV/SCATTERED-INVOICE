@@ -95,6 +95,29 @@ The investigation was conducted using:
 
 ---
 
+End-to-End Detection Flow
+
+1. User Authentication
+   → Successful login using valid credentials
+
+2. Authentication Control Failure
+   → MFA expected but not enforced (bypass)
+
+3. Identity Manipulation
+   → MFA method reset or modification detected
+
+4. Post-Authentication Expansion
+   → Access to multiple applications and IP addresses
+
+5. Anomalous Activity
+   → Geographic inconsistency (impossible travel)
+
+6. Detection Trigger
+   → Risk score threshold exceeded (Score ≥ 6)
+
+7. Automated Response
+   → SOAR playbook executed (account containment and session revocation)
+
 ## Solution Summary
 
 | # | Question | Answer |
