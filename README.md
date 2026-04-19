@@ -1,4 +1,5 @@
-# 🛡️ BEC Investigation – MFA Fatigue Attack (Scattered Spider)
+# 🚨 Cloud Identity Threat Detection - BEC Investigation
+MFA Bypass & Behavioral Correlation (Scattered Spider–Inspired)
 
 ![SOC Analysis](https://img.shields.io/badge/SOC-Analysis-blue)
 ![Detection Engineering](https://img.shields.io/badge/Detection-Engineering-purple)
