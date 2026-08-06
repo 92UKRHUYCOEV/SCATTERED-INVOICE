@@ -10,6 +10,14 @@ MFA Bypass & Behavioral Correlation (Scattered Spider–Inspired)
 
 ---
 
+## Attack Flow (Kill Chain)
+<p align="left">
+  <img src="./SCATTERED-INVOICEREADME_DIAGRAM_FINAL.png)" width="70%">
+</p>
+### Figure 1 – BEC Attack Kill Chain
+
+---
+
 ## 🚨 Overview
 
 This project documents a full-scale Security Operations Center (SOC) investigation into a Business Email Compromise (BEC) attack.
@@ -53,14 +61,6 @@ The investigation was conducted using:
 
 ---
   
-## Attack Flow (Kill Chain)
-<p align="left">
-  <img src="(https://github.com/92UKRHUYCOEV/SCATTERED-INVOICE/blob/main/SCATTERED-INVOICEREADME_DIAGRAM_FINAL.png)" width="70%">
-</p>
-### Figure 1 – BEC Attack Kill Chain
-
----
-
 ## Attack Timeline
 
 | Time (UTC) | Event |
