@@ -55,7 +55,7 @@ The investigation was conducted using:
   
 ## Attack Flow (Kill Chain)
 <p align="left">
-  <img src="[SCATTERED-INVOICEREADME_DIAGRAM_FINAL.png](https://github.com/92UKRHUYCOEV/SCATTERED-INVOICE/blob/main/SCATTERED-INVOICEREADME_DIAGRAM_FINAL.png)" width="70%">
+  <img src="(https://github.com/92UKRHUYCOEV/SCATTERED-INVOICE/blob/main/SCATTERED-INVOICEREADME_DIAGRAM_FINAL.png)" width="70%">
 </p>
 ### Figure 1 – BEC Attack Kill Chain
 
