@@ -10,11 +10,10 @@ MFA Bypass & Behavioral Correlation (Scattered Spider–Inspired)
 
 ---
 
-## Attack Flow (Kill Chain)
+## BEC Attack Kill Chain
 <p align="left">
-  <img src="./SCATTERED-INVOICEREADME_DIAGRAM_FINAL.png)" width="70%">
+  <img src="./SCATTERED-INVOICEREADME_DIAGRAM_FINAL.png" alt="BEC Attack Kill Chain" width="70%">
 </p>
-### Figure 1 – BEC Attack Kill Chain
 
 ---
 
