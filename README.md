@@ -107,7 +107,7 @@ Taken together, these indicators form a coherent and actionable IOC set that can
 |---|---|---|
 | IP Address | `205.147.16.190` | Attacker source IP (Netherlands) |
 | Email Address | `insights@duck.com` | Inbox rule forwarding destination |
-| Email Address | `jwilson.vhr@proton.me` | *(not observed in this hunt, included from threat intel on Scattered Spider)* |
+| Email Address | `j.reynolds@lognpacific.org` | BEC Target email address|
 | Session ID | `00225cfa-a0ff-fb46-a079-5d152fcdf72a` | Attacker session GUID across all activity |
 | User Agent | `Firefox 147.0 / Linux` | Attacker browser and OS |
 | Email Subject | `RE: Invoice #INV-2026-0892 - Updated Banking Details` | BEC email subject line |
