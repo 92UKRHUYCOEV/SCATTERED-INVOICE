@@ -17,7 +17,7 @@ MFA Bypass & Behavioral Correlation (Scattered Spider–Inspired)
 
 ---
 
-## Executive Summary
+## 📢Executive Summary
 
 This threat hunt investigated a Business Email Compromise (BEC) incident in which a finance employee's account was abused to support a fraudulent wire transfer attempt valued at GBP 24,500. Analysis of authentication, email, and cloud application telemetry confirmed that the attacker gained access through a successful `MFA fatigue attack` against the compromised user account, `m.smith@lognpacific.org`.  After repeated push notifications were denied, the user approved one request, enabling the attacker to establish an authenticated session from an anomalous external IP address.
 
@@ -33,26 +33,40 @@ Overall, this hunt demonstrates how a relatively low-complexity user action - ap
 
 ---
 
-## 🚨 Overview
+## 🚨 Incident Overview
 
-This project documents a full-scale Security Operations Center (SOC) investigation into a Business Email Compromise (BEC) attack.
+A suspected Business Email Compromise (BEC) incident triggered this threat hunt after a GBP 24,500 wire transfer was redirected using fraudulent banking details. The transaction was stopped by the bank before completion, but the attempted fraud indicated that a trusted internal account had likely been compromised and used to influence finance operations.
+Initial reporting identified `Mark Smith`, a finance employee, as the apparent sender of the message containing the updated payment instructions. Mark later reported receiving repeated `multi-factor authentication (MFA` prompts the previous evening and stated that he eventually approved one request to stop the notifications. The following morning, his team discovered inbox rules that he did not recognize or create, raising immediate concern that his Microsoft 365 account had been accessed and manipulated by an unauthorized party.
 
-The attacker leveraged:
+The purpose of this hunt was to determine how the attacker obtained access, what actions were taken after authentication, what persistence and evasion mechanisms were established, whether fraudulent communications were sent, and whether additional cloud resources were accessed during the compromise window. The investigation focused on identifying the compromised identity, attacker infrastructure, mailbox manipulation, evidence of fraud execution, and indicators that could support containment, detection engineering, and future response automation.
 
-- MFA fatigue (push bombing)
-- Inbox rule persistence
-- Internal email spoofing (thread hijacking)
-- Cloud data access (OneDrive / SharePoint)
+Analysis was conducted in Microsoft Sentinel using the `SigninLogs`, `CloudAppEvents`, and `EmailEvents` tables across the defined investigation window. The hunt centered on correlating identity, email, and cloud application telemetry to reconstruct the full attack path from initial access through post-compromise activity. Particular attention was given to `MFA fatigue` patterns, anomalous sign-in geography, suspicious device and browser characteristics, malicious inbox rule creation, internal thread hijacking, and access to Microsoft cloud applications such as Outlook, OneDrive, and SharePoint.
 
-The investigation was conducted using:
+The broader objective of the hunt was not only to confirm the compromise, but also to translate the findings into practical defensive outcomes. This included extracting indicators of compromise, identifying control gaps, mapping activity to MITRE ATT&CK, and developing high-confidence detection and response opportunities in Microsoft Sentinel. The scenario reflects a realistic cloud identity-driven BEC attack in which valid credentials, user-approved MFA, and trusted internal communications were leveraged to facilitate financial fraud and conceal malicious activity.
 
-- Microsoft Sentinel (KQL)
-- SigninLogs, CloudAppEvents, EmailEvents
-- MITRE ATT&CK framework for threat mapping
+---
+
+## 🔧 Environment and Data Sources
+The investigation was conducted within Microsoft Sentinel in the LAW-Cyber-Range workspace, which served as the central analysis environment for reviewing authentication, email, and cloud activity associated with the suspected Business Email Compromise (BEC). The defined investigation window focused on activity occurring between 25 February 2026, 21:00 UTC and 26 February 2026, 00:00 UTC, aligning with the period in which the reported MFA prompts, unauthorized access, inbox rule creation, and fraudulent email activity took place.
+
+The hunt relied on three primary telemetry sources to reconstruct the attack chain and validate the sequence of malicious activity:
+- **SigninLogs**
+This table was used to investigate identity and authentication behavior. It provided visibility into the compromised user's sign-in attempts, MFA challenge outcomes, successful authentication events, source IP addresses, geographic anomalies, application access, device characteristics, browser information, session identifiers, and conditional access outcomes. These records were essential for confirming the account compromise and identifying the attacker's access path.
+	
+- **CloudAppEvents**
+This table was used to analyze post-authentication cloud activity within Microsoft 365 services. It provided evidence of mailbox access, inbox rule creation, persistence mechanisms, and access to additional cloud-hosted resources. The RawEventData field also enabled deeper inspection of rule parameters and session context, including forwarding destinations, trigger keywords, and correlation artifacts such as the Azure AD session ID linking multiple attacker actions.
+	
+- **EmailEvents**
+	This table was used to validate the Business Email Compromise component of the incident. It provided visibility into fraudulent email transmission from the compromised account, recipient targeting, subject line context, email direction, and sender IP correlation. This telemetry was critical in demonstrating that the authenticated session was used not only for persistence and reconnaissance, but also for direct fraud enablement.
+	
+Together, these data sources enabled a cross-table investigative approach, allowing authentication events, cloud application actions, and malicious email activity to be correlated into a single attack narrative. This multi-source visibility was necessary to establish high-confidence findings, confirm attacker behavior across the full compromise lifecycle, and support the development of actionable detections, response playbooks, and indicators of compromise.
+
+
 
 ---
 
 ## 🎯 Key Outcomes
+
 - Identified MFA fatigue attack leading to account compromise
 - Correlated attacker activity across identity, email, and cloud telemetry
 - Detected malicious inbox rules used for persistence and evasion
@@ -61,7 +75,35 @@ The investigation was conducted using:
 
 ---
 
-## Indicators of Compromise
+## 🎨 Indicators of Compromise (IOCs)
+
+The investigation identified multiple indicators of compromise across authentication, mailbox activity, and post-authentication cloud access. These artifacts provide high-confidence evidence of unauthorized access and can be used to support detection engineering, incident scoping, threat correlation, and containment activities. In this case, the IOCs are especially valuable because they connect the initial MFA fatigue compromise to the persistence mechanisms, fraudulent email activity, and broader cloud resource access observed during the investigation.
+
+- **Network Indicators**
+The primary attacker infrastructure identified during the hunt was the source IP address 205.147.16.190. This address was associated with the suspicious successful sign-in to the compromised account and was later correlated with fraudulent email activity, making it one of the strongest network-level indicators in the case. Its geolocation to the Netherlands (NL) further reinforced the anomaly when compared with the expected context of the legitimate user's activity.
+
+- **Identity and Session Indicators**
+The compromised account was m.smith@lognpacific.org, which served as the central identity abused throughout the incident. Once access was obtained, activity across authentication logs, cloud application telemetry, and email records was linked through the Azure AD session identifier 00225cfa-a0ff-fb46-a079-5d152fcdf72a. This session ID was a critical correlation artifact because it connected the successful sign-in, inbox rule creation, mailbox access, and related cloud activity to the same authenticated attacker session.
+
+- **Device and User-Agent Indicators**
+The malicious session was associated with an anomalous device profile that differed from the user's expected corporate baseline. The attacker activity was logged from Linux using Firefox 147.0, a combination that stood out against the normal Windows-based enterprise device context. These attributes are valuable supporting indicators because they add device and browser-level anomalies to the IP and identity evidence already established.
+
+- **Mailbox Persistence Indicators**
+The attacker created two malicious inbox rules to maintain visibility into sensitive communications and suppress signs of compromise. The first rule, named ".", was configured to forward finance-related messages externally, while the second rule, named "..", was designed to delete security-related notifications. These rule names are themselves indicators of suspicious activity because they were intentionally minimal and visually inconspicuous.
+A particularly important mailbox IOC was the forwarding destination insights@duck.com, which represented attacker-controlled infrastructure used to receive selected email content from the compromised mailbox. Additional configuration artifacts included the use of the StopProcessingRules parameter, which ensured that once the malicious forwarding rule was triggered, subsequent inbox rules would not execute.
+
+- **Keyword-Based Rule Indicators**
+The rule logic also exposed content-based indicators that reflected attacker intent. The forwarding rule targeted finance-related keywords associated with invoice and payment discussions, confirming that the objective was selective interception of business-relevant communications. The deletion rule targeted the keywords suspicious, security, phishing, unusual, compromised, verify, indicating deliberate suppression of warning messages, security notifications, and other emails likely to alert the user or defenders.
+
+- **Email Fraud Indicators**
+The compromised session was used to send a fraudulent internal email as part of the BEC workflow. The message was classified as Intra-org, showing that the attacker operated within the trusted internal email environment rather than relying on external spoofing infrastructure. The sender IP observed in the email telemetry matched 205.147.16.190, directly linking the malicious sign-in session to the attempted fraud.
+
+- **Cloud Access Indicators**
+Beyond mailbox abuse, the attacker also accessed Microsoft cloud services associated with OneDrive and SharePoint. These application access artifacts are important because they indicate that the incident extended beyond email compromise alone and introduced the possibility of document access, internal reconnaissance, or broader data exposure. As a result, the IOC set for this case should not be limited to email artifacts, but should also include the cloud applications touched during the malicious session.
+
+- **Operational Value of the IOC Set**
+Taken together, these indicators form a coherent and actionable IOC set that can support both immediate response and long-term detection improvement. The IP address, compromised user identity, session ID, forwarding destination, suspicious rule names, rule keywords, browser profile, and cloud applications accessed all contribute to a high-confidence picture of attacker behavior. These artifacts can be used to search for related activity elsewhere in the environment, tune Microsoft Sentinel detections, enrich case documentation, and guide containment actions such as session revocation, inbox rule removal, and retrospective review of similar mailbox activity across other accounts.
+
 
 | IOC Type | Value | Context |
 |---|---|---|
