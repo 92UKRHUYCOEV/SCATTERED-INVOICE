@@ -17,6 +17,22 @@ MFA Bypass & Behavioral Correlation (Scattered Spider–Inspired)
 
 ---
 
+## Executive Summary
+
+This threat hunt investigated a Business Email Compromise (BEC) incident in which a finance employee's account was abused to support a fraudulent wire transfer attempt valued at GBP 24,500. Analysis of authentication, email, and cloud application telemetry confirmed that the attacker gained access through a successful MFA fatigue attack against the compromised user account, m.smith@lognpacific.org.  After repeated push notifications were denied, the user approved one request, enabling the attacker to establish an authenticated session from an anomalous external IP address.
+
+Post-authentication activity showed a clear progression from access to persistence and fraud enablement. The attacker first accessed the victim's mailbox, then created malicious inbox rules designed to both forward financially relevant emails to attacker-controlled infrastructure and delete messages likely to expose the compromise, including security-related alerts. The activity was consistent with deliberate inbox-rule abuse for persistence, defense evasion, and intelligence gathering ahead of BEC execution.
+
+The investigation also confirmed that the compromised session was used to send a fraudulent internal email as part of a thread-hijacking workflow targeting finance operations. Correlation across SigninLogs, CloudAppEvents, and EmailEvents linked the sign-in activity, inbox rule creation, and BEC email transmission to the same attacker session, providing high-confidence attribution of the attack chain. Additional evidence indicated access to Microsoft cloud resources beyond email, expanding the potential impact beyond the attempted payment fraud alone.
+
+Several key indicators of compromise were identified during the hunt, including the attacker IP address, suspicious forwarding destination, anomalous Linux/Firefox user agent profile, and a shared Azure AD session identifier connecting the full sequence of malicious activity. These artifacts, combined with the observed behavior, align closely with Scattered Spider-style tradecraft, particularly the use of MFA fatigue, cloud identity abuse, inbox rule manipulation, and financially motivated targeting of internal business processes.
+
+From a defensive perspective, the incident exposed weaknesses in identity protection, user resilience to MFA fatigue, and detection coverage for suspicious inbox-rule creation and anomalous cloud access. In response, this hunt produced actionable detection opportunities for Microsoft Sentinel, including MFA fatigue correlation, inbox-rule persistence monitoring, external forwarding detection, and multi-stage session-based correlation. Immediate containment priorities include revoking active sessions, removing malicious inbox rules, resetting credentials, and reviewing downstream access to email and cloud-stored data.
+
+Overall, this hunt demonstrates how a relatively low-complexity user action - approving an MFA prompt - can enable a full BEC attack path when combined with valid credentials, cloud-native persistence, and trusted internal communication channels. The findings reinforce the need for stronger conditional access controls, improved alerting on post-authentication abuse, and rapid automated response workflows to contain identity-driven attacks before financial impact occurs.
+
+---
+
 ## 🚨 Overview
 
 This project documents a full-scale Security Operations Center (SOC) investigation into a Business Email Compromise (BEC) attack.
