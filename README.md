@@ -234,11 +234,100 @@ These findings highlight multiple gaps across identity, email, and cloud telemet
 
 ---
 
-All detections are:
+## ⚓ Detection Engineering Opportunities
 
-- Production-ready
-- MITRE ATT&CK aligned
-- Designed for Microsoft Sentinel
+The findings from this hunt highlight several opportunities to improve detection coverage for identity-driven Business Email Compromise (BEC) activity in Microsoft Sentinel. The attack succeeded not because of a single control failure, but because multiple low-signal events - repeated MFA prompts, anomalous authentication context, mailbox rule creation, internal email abuse, and cloud resource access - were able to occur in sequence without being correlated into a high-confidence alert. The strongest detection opportunities therefore lie in behavioral correlation, where multiple weak indicators are combined into a more actionable signal.
+
+### 1. MFA Fatigue Correlation Detection
+A priority detection opportunity is the identification of repeated MFA denials followed by a successful sign-in from the same IP address or session context. On their own, failed MFA events can generate noise, but when clustered within a short time window and followed by success, they become a strong indicator of MFA fatigue. This is particularly valuable when paired with contextual enrichments such as anomalous geolocation, unusual application access, or unfamiliar device characteristics.
+
+A production detection should correlate:
+- multiple MFA-related failures within a short period,
+- a subsequent successful authentication,
+- the same user account,
+- and matching or closely related attacker infrastructure.
+  
+This logic would directly target the initial access pattern observed in this case and provide defenders with earlier visibility before the attacker can establish persistence.
+### 2. Anomalous Successful Sign-In Detection
+A second high-value opportunity is detection of successful sign-ins that deviate from the user's normal access profile. In this incident, the attacker used an external IP address, foreign geolocation, Linux operating system, and Firefox browser profile, all of which differed from the user's expected enterprise baseline. A stronger analytic would identify successful authentications where multiple anomaly features occur together rather than alerting on a single deviation in isolation.
+
+This type of detection is especially effective when based on a scoring or threshold model, for example:
+- unfamiliar IP address,
+- unusual country,
+- non-standard operating system,
+- unusual browser,
+- and web-based access to cloud services outside the user's norm.
+
+The goal is to reduce false positives by emphasizing stacked anomalies, not isolated ones.
+### 3. Inbox Rule Creation and Persistence Detection
+The creation of malicious inbox rules represents one of the clearest and most actionable signals in this hunt. A dedicated analytic should alert on all new inbox rule creation events, then elevate severity when the rule includes suspicious characteristics such as:
+- forwarding to an external address,
+- deletion behavior,
+- finance-related keyword filters,
+- security-related keyword filters,
+- or suppression settings such as StopProcessingRules.
+
+Because inbox rule abuse is a common persistence and defense evasion mechanism in BEC cases, these events should be treated as high-priority when they occur shortly after an anomalous authentication event. Detection quality improves further when the rule name itself is suspicious, such as single-character or visually inconspicuous naming conventions like "." or "..".
+
+### 4. External Forwarding Detection
+A dedicated rule for external mailbox forwarding would provide additional value, especially in financial and executive user populations. Not all forwarding activity is malicious, but forwarding to an untrusted domain immediately after suspicious sign-in activity should be treated as a strong escalation point. Detection logic should extract forwarding destinations from rule configuration data and compare them against trusted organizational domains or approved allowlists.
+
+This analytic becomes particularly useful when paired with:
+- recent identity anomalies,
+- first-time forwarding behavior for the user,
+- or forwarding rules filtered around finance and payment terminology.
+
+### 5. Internal BEC / Thread Hijacking Detection
+The fraudulent message in this incident was classified as intra-organizational, meaning the attacker operated within the trusted internal email environment. This creates a blind spot for traditional email controls that are tuned primarily for external phishing or spoofing. Detection opportunities therefore exist for identifying internal emails sent from compromised accounts under suspicious conditions, especially when the sender IP, device profile, or sign-in context differs from the user's baseline.
+
+High-value detection logic could include:
+- internal emails sent shortly after risky or anomalous sign-in activity,
+- unusual sender IP correlation,
+- finance-related subject matter,
+- reply or thread-hijack behavior,
+- and messages sent from accounts with recent inbox rule creation activity.
+
+This is one of the most important opportunities in the hunt because it directly addresses the fraud execution stage rather than only the compromise stage.
+
+## 6. Multi-Stage Session Correlation
+The strongest engineering opportunity is the creation of a multi-stage correlation analytic that links identity abuse, mailbox manipulation, and fraud activity within a single session or short timeframe. In this case, the most convincing evidence emerged only when SigninLogs, CloudAppEvents, and EmailEvents were considered together. 
+
+A high-confidence rule should therefore correlate:
+-  repeated MFA denials,
+-  successful sign-in,
+-  mailbox access,
+-  new inbox rule creation,
+-  and internal or suspicious email activity.
+
+Where available, shared artifacts such as session ID, source IP, user account, and timestamp sequence should be used to bind events together. This kind of analytic is far more resilient than any single-indicator rule and is better aligned to the actual attack path used by modern cloud-focused adversaries.
+
+### 7. Cloud Resource Access Expansion Detection
+Because the attacker also accessed OneDrive and SharePoint, there is a clear opportunity to detect post-authentication expansion into cloud-hosted data sources following suspicious sign-in behavior. Successful mailbox compromise often serves as the first stage of broader data access, and detections should account for that progression. Monitoring should focus on cloud application access immediately following risky authentication events, especially when the user has not previously shown similar patterns of access.
+
+This type of analytic helps move the organization from narrow BEC detection into broader cloud compromise scoping, which is important for measuring exposure and determining whether sensitive files were reviewed or collected.
+
+### 8. Risk-Based Detection Prioritization
+A practical improvement would be to combine these behaviors into a risk-based analytic model rather than treating them as separate alerts of equal importance. For example:
+- MFA fatigue pattern = moderate risk
+- anomalous successful sign-in = moderate risk
+- malicious inbox rule creation = high risk
+- external forwarding = high risk
+- intra-org fraud email = critical risk
+
+Stacking these detections into a cumulative score can help analysts distinguish benign anomalies from coordinated attack activity. This reduces alert fatigue while increasing the chance that meaningful BEC patterns are escalated quickly.
+
+### 9. Detection Tuning Considerations
+To make these detections operationally effective, tuning is important. False positives can be reduced by:
+- excluding approved administrative forwarding scenarios,
+- allowlisting trusted internal or sanctioned service accounts where appropriate,
+- establishing per-user or per-role baselines for geography and browser use,
+- and prioritizing detections for high-risk populations such as finance, payroll, executives, and privileged cloud users.
+
+This matters because identity-based BEC attacks often blend normal and abnormal behavior. High-fidelity detection depends less on raw event volume and more on carefully tuned context.
+
+### 10. Defensive Value
+
+The overall detection engineering lesson from this hunt is that no single event was sufficiently conclusive on its own, but the sequence was highly suspicious when correlated. That makes this case a strong example of why Sentinel detections should be engineered around attack progression, not isolated telemetry. By linking authentication abuse, mailbox persistence, internal fraud behavior, and cloud application access into a single analytical framework, defenders can detect this style of compromise earlier and respond before financial loss or broader data exposure occurs.
   
 ---
 
