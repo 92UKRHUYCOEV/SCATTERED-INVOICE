@@ -116,7 +116,7 @@ Taken together, these indicators form a coherent and actionable IOC set that can
 
 ---
   
-## Attack Timeline
+## 🕑 Attack Timeline
 
 | Time (UTC) | Event |
 |---|---|
@@ -179,7 +179,7 @@ Taken together, these indicators form a coherent and actionable IOC set that can
 <img width="700" height="250" alt="detection-flow-mfa-bypass_crop2" src="https://github.com/user-attachments/assets/b0b293d7-7c66-4eae-994c-6a3b4d41b3c5" />
 </p>
 
-## Solution Summary
+## 🗝️ Solution Summary
 
 | # | Question | Answer |
 |---|----------|------|
@@ -223,7 +223,7 @@ Taken together, these indicators form a coherent and actionable IOC set that can
 | Initial Access       | Valid Accounts: Cloud Accounts        | T1078.004 | Compromised credentials were used to successfully authenticate to the environment | No detection for anomalous sign-ins based on location, device, or risk signals    |
 | Initial Access       | MFA Request Generation                | T1621     | Multiple MFA push notifications were sent prior to user approval                  | No detection for repeated MFA denials followed by a successful authentication     |
 | Persistence          | Email Forwarding Rule                 | T1114.003 | Malicious inbox rule created to forward invoice-related emails externally         | No alerting on inbox rules configured with external forwarding destinations       |
-| Defense Evasion      | Email Hiding Rules                    | T1564.008 | Inbox rule created to automatically delete security-related emails                | No detection for rules that suppress or delete security or alert-related emails   |
+| Defense Evasion      | Email Hiding Rules                    | T1564.008 | Rule naming with . and .. to reduce visibility and avoid casual detection         | Hide Artifacts: Email Hiding Rules that suppress or delete security or alert-related emails   |
 | Collection           | Email Collection: Remote Email Access | T1114.002 | Mailbox accessed remotely from attacker-controlled IP during active session       | No alerting on mailbox access from unfamiliar or anomalous IP addresses           |
 | Lateral Movement     | Internal Spearphishing                | T1534     | Fraudulent email sent internally to finance personnel from compromised account    | Internal email traffic bypassed traditional email security controls               |
 | Collection           | Data from Cloud Storage               | T1530     | Files accessed from OneDrive and SharePoint following account compromise          | No detection for suspicious file access tied to anomalous session activity        |
