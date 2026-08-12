@@ -130,6 +130,7 @@ The first observed action after authentication was MailItemsAccessed, indicating
 Q10 — Rule-Creation Method
 Answer: New-InboxRule
 The attacker used New-InboxRule to create durable mailbox rules that continued operating beyond the initial interactive session.
+
 Q11 — Forwarding-Rule Name
 Answer: .
 The forwarding rule was assigned the single-character name ., making it less noticeable during a casual review of the victim’s mailbox settings.
