@@ -19,49 +19,56 @@ MFA Bypass & Behavioral Correlation (Scattered Spider–Inspired)
 
 ## 📢Executive Summary
 
-This threat hunt investigated a Business Email Compromise (BEC) incident in which a finance employee's account was abused to support a fraudulent wire transfer attempt valued at GBP 24,500. Analysis of authentication, email, and cloud application telemetry confirmed that the attacker gained access through a successful `MFA fatigue attack` against the compromised user account, `m.smith@lognpacific.org`.  After repeated push notifications were denied, the user approved one request, enabling the attacker to establish an authenticated session from an anomalous external IP address.
-
-Post-authentication activity showed a clear progression from access to persistence and fraud enablement. The attacker first accessed the victim's mailbox, then created malicious inbox rules designed to both forward financially relevant emails to attacker-controlled infrastructure and delete messages likely to expose the compromise, including security-related alerts. The activity was consistent with deliberate inbox-rule abuse for persistence, defense evasion, and intelligence gathering ahead of BEC execution.
-
-The investigation also confirmed that the compromised session was used to send a fraudulent internal email as part of a thread-hijacking workflow targeting finance operations. Correlation across `SigninLogs`, `CloudAppEvents`, and `EmailEvents` linked the sign-in activity, inbox rule creation, and BEC email transmission to the same attacker session, providing high-confidence attribution of the attack chain. Additional evidence indicated access to Microsoft cloud resources beyond email, expanding the potential impact beyond the attempted payment fraud alone.
-
-Several key indicators of compromise were identified during the hunt, including the attacker IP address, suspicious forwarding destination, anomalous Linux/Firefox user agent profile, and a shared Azure AD session identifier connecting the full sequence of malicious activity. These artifacts, combined with the observed behavior, align closely with Scattered Spider-style tradecraft, particularly the use of MFA fatigue, cloud identity abuse, inbox rule manipulation, and financially motivated targeting of internal business processes.
-
-From a defensive perspective, the incident exposed weaknesses in identity protection, user resilience to MFA fatigue, and detection coverage for suspicious inbox-rule creation and anomalous cloud access. In response, this hunt produced actionable detection opportunities for Microsoft Sentinel, including MFA fatigue correlation, inbox-rule persistence monitoring, external forwarding detection, and multi-stage session-based correlation. Immediate containment priorities include revoking active sessions, removing malicious inbox rules, resetting credentials, and reviewing downstream access to email and cloud-stored data.
-
-Overall, this hunt demonstrates how a relatively low-complexity user action - approving an MFA prompt - can enable a full BEC attack path when combined with valid credentials, cloud-native persistence, and trusted internal communication channels. The findings reinforce the need for stronger conditional access controls, improved alerting on post-authentication abuse, and rapid automated response workflows to contain identity-driven attacks before financial impact occurs.
+This threat hunt investigated a Business Email Compromise (BEC) incident involving the abuse of a finance employee’s account to facilitate a fraudulent wire transfer attempt valued at GBP 24,500. Authentication telemetry confirmed that the attacker gained access to m.smith@lognpacific.org through MFA fatigue: after multiple push notifications were denied, one request was approved, establishing an authenticated session from an anomalous external IP address using a Linux/Firefox client.
+Following authentication, the attacker accessed the victim’s mailbox and created malicious inbox rules. These rules forwarded financially relevant messages to an external address and deleted emails that could expose the compromise, including security notifications. This activity supported persistence, defense evasion, and intelligence gathering ahead of the fraudulent payment attempt.
+Correlation across SigninLogs, CloudAppEvents, and EmailEvents connected the suspicious sign-in, inbox-rule creation, and transmission of a fraudulent internal email through a shared Azure AD session identifier. The evidence established a high-confidence attack sequence involving account compromise, mailbox manipulation, thread hijacking, and attempted payment fraud. Access to additional Microsoft cloud resources also indicated that the potential impact extended beyond email.
+Key indicators included the attacker’s IP address, external forwarding destination, anomalous Linux/Firefox client profile, and shared session identifier. Recommended containment actions include revoking active sessions, resetting the compromised credentials, removing malicious inbox rules, reviewing cloud and mailbox activity, and validating whether sensitive information was accessed or transferred. The hunt also identified detection opportunities for MFA fatigue, suspicious inbox-rule creation, external forwarding, anomalous cloud access, and session-based correlation across multiple stages of identity-driven attacks.
 
 ---
 
 ## 🚨 Incident Overview
 
-A suspected Business Email Compromise (BEC) incident triggered this threat hunt after a GBP 24,500 wire transfer was redirected using fraudulent banking details. The transaction was stopped by the bank before completion, but the attempted fraud indicated that a trusted internal account had likely been compromised and used to influence finance operations.
-Initial reporting identified `Mark Smith`, a finance employee, as the apparent sender of the message containing the updated payment instructions. Mark later reported receiving repeated `multi-factor authentication (MFA` prompts the previous evening and stated that he eventually approved one request to stop the notifications. The following morning, his team discovered inbox rules that he did not recognize or create, raising immediate concern that his Microsoft 365 account had been accessed and manipulated by an unauthorized party.
-
-The purpose of this hunt was to determine how the attacker obtained access, what actions were taken after authentication, what persistence and evasion mechanisms were established, whether fraudulent communications were sent, and whether additional cloud resources were accessed during the compromise window. The investigation focused on identifying the compromised identity, attacker infrastructure, mailbox manipulation, evidence of fraud execution, and indicators that could support containment, detection engineering, and future response automation.
-
-Analysis was conducted in Microsoft Sentinel using the `SigninLogs`, `CloudAppEvents`, and `EmailEvents` tables across the defined investigation window. The hunt centered on correlating identity, email, and cloud application telemetry to reconstruct the full attack path from initial access through post-compromise activity. Particular attention was given to `MFA fatigue` patterns, anomalous sign-in geography, suspicious device and browser characteristics, malicious inbox rule creation, internal thread hijacking, and access to Microsoft cloud applications such as Outlook, OneDrive, and SharePoint.
-
-The broader objective of the hunt was not only to confirm the compromise, but also to translate the findings into practical defensive outcomes. This included extracting indicators of compromise, identifying control gaps, mapping activity to MITRE ATT&CK, and developing high-confidence detection and response opportunities in Microsoft Sentinel. The scenario reflects a realistic cloud identity-driven BEC attack in which valid credentials, user-approved MFA, and trusted internal communications were leveraged to facilitate financial fraud and conceal malicious activity.
+A suspected Business Email Compromise (BEC) triggered this threat hunt after fraudulent banking details were used in an attempted GBP 24,500 wire transfer. The bank stopped the transaction before completion, preventing financial loss. Because the payment instructions appeared to originate from Mark Smith, a finance employee, the incident indicated that a trusted internal account may have been compromised.
+Mark reported receiving repeated multi-factor authentication (MFA) prompts the previous evening and eventually approving one to stop the notifications. The following morning, his team discovered unauthorized inbox rules in his Microsoft 365 account. These events raised concerns that an attacker had gained authenticated access, manipulated the mailbox, and used trusted internal communications to target finance operations.
+The investigation used SigninLogs, CloudAppEvents, and EmailEvents in Microsoft Sentinel to reconstruct activity across identity, email, and Microsoft cloud services. The hunt sought to determine:
+	• How the attacker gained access
+	• What actions occurred after authentication
+	• Whether mailbox persistence or defense-evasion mechanisms were established
+	• Whether fraudulent communications were sent
+	• Whether other Microsoft cloud resources were accessed
+	• Which indicators, control gaps, and detection opportunities could support containment and future response
+Analysis focused on MFA fatigue, anomalous sign-in characteristics, mailbox-rule manipulation, thread hijacking, and access to Outlook, OneDrive, and SharePoint. Findings were also evaluated for MITRE ATT&CK mapping and the development of high-confidence Microsoft Sentinel detections.
 
 ---
 
 ## 🔧 Environment and Data Sources
-The investigation was conducted within Microsoft Sentinel in the LAW-Cyber-Range workspace, which served as the central analysis environment for reviewing authentication, email, and cloud activity associated with the suspected Business Email Compromise (BEC). The defined investigation window focused on activity occurring between 25 February 2026, 21:00 UTC and 26 February 2026, 00:00 UTC, aligning with the period in which the reported MFA prompts, unauthorized access, inbox rule creation, and fraudulent email activity took place.
 
-The hunt relied on three primary telemetry sources to reconstruct the attack chain and validate the sequence of malicious activity:
-- **SigninLogs**
-This table was used to investigate identity and authentication behavior. It provided visibility into the compromised user's sign-in attempts, MFA challenge outcomes, successful authentication events, source IP addresses, geographic anomalies, application access, device characteristics, browser information, session identifiers, and conditional access outcomes. These records were essential for confirming the account compromise and identifying the attacker's access path.
-	
-- **CloudAppEvents**
-This table was used to analyze post-authentication cloud activity within Microsoft 365 services. It provided evidence of mailbox access, inbox rule creation, persistence mechanisms, and access to additional cloud-hosted resources. The RawEventData field also enabled deeper inspection of rule parameters and session context, including forwarding destinations, trigger keywords, and correlation artifacts such as the Azure AD session ID linking multiple attacker actions.
-	
-- **EmailEvents**
-	This table was used to validate the Business Email Compromise component of the incident. It provided visibility into fraudulent email transmission from the compromised account, recipient targeting, subject line context, email direction, and sender IP correlation. This telemetry was critical in demonstrating that the authenticated session was used not only for persistence and reconnaissance, but also for direct fraud enablement.
-	
-Together, these data sources enabled a cross-table investigative approach, allowing authentication events, cloud application actions, and malicious email activity to be correlated into a single attack narrative. This multi-source visibility was necessary to establish high-confidence findings, confirm attacker behavior across the full compromise lifecycle, and support the development of actionable detections, response playbooks, and indicators of compromise.
+The investigation was conducted in Microsoft Sentinel using the LAW-Cyber-Range workspace. The investigation window covered 25 February 2026, 21:00 UTC through 26 February 2026, 00:00 UTC, encompassing the reported MFA prompts, unauthorized account access, inbox-rule creation, and fraudulent email activity.
+Three primary data sources were used:
+Data source	Investigative purpose
+SigninLogs	Examined authentication attempts, MFA outcomes, source IP addresses, geographic anomalies, client characteristics, application access, conditional access results, and session identifiers.
+CloudAppEvents	Identified post-authentication activity, including mailbox access, inbox-rule creation, forwarding parameters, cloud-resource access, and session-correlation artifacts contained in RawEventData.
+EmailEvents	Validated fraudulent email activity by examining sender and recipient details, subject context, email direction, delivery information, and associated IP addresses.
+Correlation across these sources connected the attacker’s authentication activity with subsequent mailbox manipulation and fraudulent email transmission, enabling reconstruction of the BEC attack sequence.
 
 ---
+
+## 🤖 Hunt Methodology 
+
+The hunt used a structured, hypothesis-driven methodology to validate the reported Business Email Compromise (BEC), reconstruct the attack path, and assess the scope of malicious activity.
+The initial hypothesis was that a legitimate Microsoft 365 account had been compromised through MFA fatigue (push bombing), allowing an attacker to establish an authenticated session and use the account for mailbox manipulation and financial fraud.
+The investigation proceeded through four phases:
+Phase	Investigative objective
+1. Validate initial access	Review SigninLogs to identify the compromised account, MFA sequence, suspicious source IP address, anomalous location, client profile, accessed applications, and session identifiers.
+2. Analyze post-authentication activity	Review CloudAppEvents chronologically to determine the attacker’s actions following authentication and identify access to Microsoft 365 resources.
+3. Identify persistence and evasion	Examine mailbox activity and RawEventData for unauthorized inbox rules, external forwarding, targeted keywords, and message-deletion behavior.
+4. Confirm BEC execution	Use EmailEvents to identify fraudulent communications and correlate them with the suspicious authentication and cloud activity.
+Cross-table correlation was central to the methodology. IP addresses, timestamps, application context, client characteristics, and Azure AD session identifiers were used to connect related events into a single evidentiary chain. This reduced reliance on isolated events and increased confidence that the observed activities originated from the same compromised session.
+The resulting findings were evaluated for indicator extraction, MITRE ATT&CK mapping, detection engineering, and automated response opportunities.
+
+
+
+
 
 ## 🎯 Key Outcomes
 
