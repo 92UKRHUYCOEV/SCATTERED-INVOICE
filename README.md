@@ -57,12 +57,15 @@ Correlation across these sources connected the attacker’s authentication activ
 
 The hunt used a structured, hypothesis-driven methodology to validate the reported Business Email Compromise (BEC), reconstruct the attack path, and assess the scope of malicious activity.
 The initial hypothesis was that a legitimate Microsoft 365 account had been compromised through MFA fatigue (push bombing), allowing an attacker to establish an authenticated session and use the account for mailbox manipulation and financial fraud.
+
 The investigation proceeded through four phases:
-Phase	Investigative objective
-1. Validate initial access	Review SigninLogs to identify the compromised account, MFA sequence, suspicious source IP address, anomalous location, client profile, accessed applications, and session identifiers.
-2. Analyze post-authentication activity	Review CloudAppEvents chronologically to determine the attacker’s actions following authentication and identify access to Microsoft 365 resources.
-3. Identify persistence and evasion	Examine mailbox activity and RawEventData for unauthorized inbox rules, external forwarding, targeted keywords, and message-deletion behavior.
-4. Confirm BEC execution	Use EmailEvents to identify fraudulent communications and correlate them with the suspicious authentication and cloud activity.
+|Phase	|Investigative objective  |
+|-------|-----------------------------------------|
+|1. Validate initial access	|Review SigninLogs to identify the compromised account, MFA sequence, suspicious source IP address, anomalous location, client profile, accessed applications, and session identifiers. |
+|2. Analyze post-authentication activity	|Review CloudAppEvents chronologically to determine the attacker’s actions following authentication and identify access to Microsoft 365 resources. |
+|3. Identify persistence and evasion	|Examine mailbox activity and RawEventData for unauthorized inbox rules, external forwarding, targeted keywords, and message-deletion behavior. |
+|4. Confirm BEC execution	|Use EmailEvents to identify fraudulent communications and correlate them with the suspicious authentication and cloud activity. |
+
 Cross-table correlation was central to the methodology. IP addresses, timestamps, application context, client characteristics, and Azure AD session identifiers were used to connect related events into a single evidentiary chain. This reduced reliance on isolated events and increased confidence that the observed activities originated from the same compromised session.
 The resulting findings were evaluated for indicator extraction, MITRE ATT&CK mapping, detection engineering, and automated response opportunities.
 
