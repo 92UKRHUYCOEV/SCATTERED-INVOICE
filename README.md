@@ -93,9 +93,9 @@ Authentication, cloud-application, and email telemetry connected these events th
 
 The following questions track the investigation from initial access through post-compromise activity and defensive assessment. Findings were validated by correlating SigninLogs, CloudAppEvents, and EmailEvents.
 
-Q00 — Sentinel Workspace
+## Q00 — Sentinel Workspace
 - Answer: LAW-Cyber-Range
-The investigation was conducted in the LAW-Cyber-Range Microsoft Sentinel workspace, confirming that the analysis used the intended dataset.
+### The investigation was conducted in the LAW-Cyber-Range Microsoft Sentinel workspace, confirming that the analysis used the intended dataset.
 
 Q01 — Compromised Account
 - Answer: m.smith@lognpacific.org
