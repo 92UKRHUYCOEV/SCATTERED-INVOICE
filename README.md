@@ -71,14 +71,16 @@ The resulting findings were evaluated for indicator extraction, MITRE ATT&CK map
 ## 🕑 Attack Timeline
 
 On 25 February 2026, the account m.smith@lognpacific.org was compromised following a sequence of unauthorized MFA requests. After multiple prompts were denied, one request was approved, allowing the attacker to establish an authenticated Microsoft 365 session from an anomalous external IP address.
-Sequence	Activity	Significance
-1	Repeated MFA requests were generated and initially denied.	Established the MFA-fatigue attempt against the user.
-2	One MFA request was approved, followed by a successful sign-in from an anomalous external IP address.	Marked the transition from attempted access to confirmed account compromise.
-3	The attacker accessed Outlook on the web and interacted with the victim’s mailbox.	Began post-authentication mailbox reconnaissance.
-4	An inbox rule named . was created to forward finance-related messages to an external address and stop subsequent rule processing.	Provided continued access to relevant correspondence and interfered with normal mailbox processing.
-5	A second inbox rule named .. was created to delete messages containing security-related terms.	Concealed alerts and other messages that could expose the compromise.
-6	A fraudulent internal email containing revised banking instructions was sent from the compromised account.	Used a trusted identity and existing email context to support the attempted GBP 24,500 wire-transfer fraud.
-7	Additional Microsoft cloud services associated with OneDrive and SharePoint were accessed.	Expanded the potential scope beyond the victim’s mailbox and required further review of file activity.
+
+| # |Activity	                                                                                            |Significance                                                                        |
+|---|-------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------|
+| 1	|Repeated MFA requests were generated and initially denied.                           	                |Established the MFA-fatigue attempt against the user. |
+| 2	|One MFA request was approved, followed by a successful sign-in from an anomalous external IP address.	|Marked the transition from attempted access to confirmed account compromise. |
+| 3	|The attacker accessed Outlook on the web and interacted with the victim’s mailbox.	                    |Began post-authentication mailbox reconnaissance. |
+| 4	|An inbox rule named . was created to forward finance-related messages to an external address and stop subsequent rule processing.	|Provided continued access to relevant correspondence and interfered with normal mailbox processing. |
+| 5	|A second inbox rule named .. was created to delete messages containing security-related terms.	|Concealed alerts and other messages that could expose the compromise. |
+| 6	|A fraudulent internal email containing revised banking instructions was sent from the compromised account.	|Used a trusted identity and existing email context to support the attempted GBP 24,500 wire-transfer fraud. |
+| 7	|Additional Microsoft cloud services associated with OneDrive and SharePoint were accessed.	|Expanded the potential scope beyond the victim’s mailbox and required further review of file activity. |
 
 Authentication, cloud-application, and email telemetry connected these events through shared indicators, including the source IP address, timestamp alignment, application context, and Azure AD session identifier. The resulting sequence show
 
