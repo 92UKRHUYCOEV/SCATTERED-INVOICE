@@ -66,17 +66,150 @@ Phase	Investigative objective
 Cross-table correlation was central to the methodology. IP addresses, timestamps, application context, client characteristics, and Azure AD session identifiers were used to connect related events into a single evidentiary chain. This reduced reliance on isolated events and increased confidence that the observed activities originated from the same compromised session.
 The resulting findings were evaluated for indicator extraction, MITRE ATT&CK mapping, detection engineering, and automated response opportunities.
 
+---
+
+## 🕑 Attack Timeline
+
+On 25 February 2026, the account m.smith@lognpacific.org was compromised following a sequence of unauthorized MFA requests. After multiple prompts were denied, one request was approved, allowing the attacker to establish an authenticated Microsoft 365 session from an anomalous external IP address.
+Sequence	Activity	Significance
+1	Repeated MFA requests were generated and initially denied.	Established the MFA-fatigue attempt against the user.
+2	One MFA request was approved, followed by a successful sign-in from an anomalous external IP address.	Marked the transition from attempted access to confirmed account compromise.
+3	The attacker accessed Outlook on the web and interacted with the victim’s mailbox.	Began post-authentication mailbox reconnaissance.
+4	An inbox rule named . was created to forward finance-related messages to an external address and stop subsequent rule processing.	Provided continued access to relevant correspondence and interfered with normal mailbox processing.
+5	A second inbox rule named .. was created to delete messages containing security-related terms.	Concealed alerts and other messages that could expose the compromise.
+6	A fraudulent internal email containing revised banking instructions was sent from the compromised account.	Used a trusted identity and existing email context to support the attempted GBP 24,500 wire-transfer fraud.
+7	Additional Microsoft cloud services associated with OneDrive and SharePoint were accessed.	Expanded the potential scope beyond the victim’s mailbox and required further review of file activity.
+
+Authentication, cloud-application, and email telemetry connected these events through shared indicators, including the source IP address, timestamp alignment, application context, and Azure AD session identifier. The resulting sequence show
+
+---
+
+## ⚓ Question-by-Question Findings
+
+The following questions track the investigation from initial access through post-compromise activity and defensive assessment. Findings were validated by correlating SigninLogs, CloudAppEvents, and EmailEvents.
+Q00 — Sentinel Workspace
+Answer: LAW-Cyber-Range
+The investigation was conducted in the LAW-Cyber-Range Microsoft Sentinel workspace, confirming that the analysis used the intended dataset.
+
+Q01 — Compromised Account
+Answer: m.smith@lognpacific.org
+This account was associated with the anomalous authentication, unauthorized inbox rules, and fraudulent internal email.
+
+Q02 — Attacker Source IP Address
+Answer: 205.147.16.190
+The suspicious sign-in originated from 205.147.16.190, an address inconsistent with the user’s normal authentication activity. This IP became a primary correlation indicator throughout the investigation.
+
+Q03 — Attack Origin Country
+Answer: Netherlands (NL)
+The source IP geolocated to the Netherlands, deviating from the user’s expected sign-in location and strengthening the assessment that the activity was unauthorized.
+
+Q04 — MFA Denial Error Code
+Answer: 50074
+Error code 50074 indicated that strong authentication was required but had not been completed. The repeated occurrences showed that the initial sign-in attempts were blocked by MFA.
+
+Q05 — MFA Fatigue Intensity
+Answer: Three denied MFA requests before approval
+The user denied three MFA push requests before approving a subsequent request. This sequence supported MFA fatigue as the method used to obtain authenticated access.
+
+Q06 — Application Accessed
+Answer: One Outlook Web
+Following MFA approval, the attacker authenticated to One Outlook Web, providing browser-based access to the victim’s mailbox.
+
+Q07 — Attacker Operating System
+Answer: Linux
+The suspicious session reported a Linux operating system, differing from the user’s expected corporate device profile and contributing to the anomalous sign-in assessment.
+
+Q08 — Attacker Browser
+Answer: Firefox 147.0
+The Linux session used Firefox 147.0. Combined with the foreign source IP address and unexpected operating system, this client profile helped distinguish the attacker’s session from normal user activity.
+
+Q09 — First Post-Authentication Action
+Answer: MailItemsAccessed
+The first observed action after authentication was MailItemsAccessed, indicating that the attacker immediately accessed mailbox content following the successful sign-in.
+
+Q10 — Rule-Creation Method
+Answer: New-InboxRule
+The attacker used New-InboxRule to create durable mailbox rules that continued operating beyond the initial interactive session.
+Q11 — Forwarding-Rule Name
+Answer: .
+The forwarding rule was assigned the single-character name ., making it less noticeable during a casual review of the victim’s mailbox settings.
+
+Q12 — Forwarding Destination
+Answer: insights@duck.com
+Selected messages were forwarded to the external address insights@duck.com. This address was treated as a key indicator because it received communications from the compromised mailbox.
+
+Q13 — Forwarding Keywords
+Answer: Finance-related invoice and payment keywords
+The rule selectively forwarded messages matching invoice and payment terminology, indicating that the attacker was targeting financially relevant correspondence rather than collecting all incoming email.
+
+Q14 — Rule-Processing Flag
+Answer: StopProcessingRules
+When the malicious rule matched a message, StopProcessingRules prevented subsequent inbox rules from evaluating it. This reduced interference from legitimate mailbox rules and helped ensure the attacker’s rule operated as configured.
+
+Q15 — Deletion-Rule Name
+Answer: ..
+The second rule was named .., another inconspicuous name that reduced its visibility within the mailbox configuration.
+
+Q16 — Deletion Keywords
+Answer: suspicious, security, phishing, unusual, compromised, verify
+The rule deleted messages containing security-related warning terms, potentially preventing the user from seeing notifications that could reveal the compromise.
+
+Q17 — BEC Target
+Answer: Finance employee responsible for payment processing
+The compromised account was used to send a fraudulent message to a finance recipient, confirming that the attacker progressed from mailbox access to attempted manipulation of a payment workflow.
+
+Q18 — BEC Subject Line
+Answer: Subject associated with an existing business conversation
+The attacker used an existing email context to support thread hijacking. This made the fraudulent payment instructions appear more credible than an unsolicited message.
+
+Q19 — Email Direction
+Answer: Intra-org
+The message was classified as internal organizational email. Because it originated from a trusted account, controls focused primarily on external email threats may have been less likely to identify it as malicious.
+
+Q20 — BEC Sender IP Address
+Answer: 205.147.16.190
+The sender IP matched the address associated with the malicious sign-in. This provided strong correlation between the unauthorized account access and subsequent BEC activity.
+
+Q21 — Cloud Application Accessed
+Answer: OneDrive-associated Microsoft application
+The compromised session accessed a OneDrive-related application, expanding the investigation scope beyond email. Further file-level analysis would be required to determine whether documents were viewed, downloaded, or transferred.
+
+Q22 — Additional Application Access
+Answer: SharePoint-associated Microsoft application
+A SharePoint-related application was also accessed during the compromise window. This required additional review but did not, by itself, establish that specific files or sites were accessed.
+
+Q23 — Session Correlation
+Answer: 00225cfa-a0ff-fb46-a079-5d152fcdf72a
+This Azure AD session identifier connected authentication, inbox-rule creation, and related cloud activity to the same authenticated session, making it a primary correlation artifact in the investigation.
+
+Q24 — Conditional Access Status
+Answer: [Insert recorded ConditionalAccessStatus value]
+The recorded status indicates how Conditional Access evaluated the successful sign-in. This value should be reviewed alongside the applied policies to determine whether controls were absent, not applicable, or insufficient to block the authentication.
+
+Q25 — MFA Fatigue MITRE ATT&CK ID
+Answer: T1621.002 — Multi-Factor Authentication Request Generation
+The repeated MFA push requests align with this technique, which covers attempts to obtain access by generating authentication requests for a user to approve.
+
+Q26 — Email Rules MITRE ATT&CK ID
+Answer: T1564.008 — Hide Artifacts: Email Hiding Rules
+The deletion rule aligns with this technique because it concealed security-related messages that could have alerted the user to the compromise.
+
+Q27 — Credential Source
+Answer: Infostealer
+The scenario indicated that the credentials likely originated from infostealer activity. The available telemetry showed the subsequent use of the credentials but did not independently confirm how they were originally obtained.
+
+Q28 — Immediate Containment
+Answer: Revoke active sessions
+Revoking sessions and authentication tokens was the immediate priority because the attacker had already established valid access. Credential reset, malicious rule removal, and MFA re-registration should follow as part of containment.
+
+Q29 — Threat-Actor Attribution
+Answer: Scattered Spider, based on the mission scenario
+The combination of MFA fatigue, cloud-account takeover, mailbox-rule abuse, and financially motivated targeting was consistent with the scenario’s Scattered Spider attribution. These behavioral similarities would not, on their own, establish definitive attribution in a real-world investigation.
+Collectively, the findings reconstructed the progression from MFA fatigue and authenticated access to mailbox manipulation, fraudulent internal communication, and additional cloud-service access. Cross-table correlation provided the evidentiary link between each stage of the BEC attack.
 
 
 
 
-## 🎯 Key Outcomes
-
-- Identified MFA fatigue attack leading to account compromise
-- Correlated attacker activity across identity, email, and cloud telemetry
-- Detected malicious inbox rules used for persistence and evasion
-- Confirmed fraudulent internal email targeting finance operations
-- Identified post-compromise data access in Microsoft OneDrive
 
 ---
 
