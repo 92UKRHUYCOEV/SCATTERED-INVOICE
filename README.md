@@ -82,7 +82,7 @@ On 25 February 2026, the account m.smith@lognpacific.org was compromised followi
 | 6	|A fraudulent internal email containing revised banking instructions was sent from the compromised account.	|Used a trusted identity and existing email context to support the attempted GBP 24,500 wire-transfer fraud. |
 | 7	|Additional Microsoft cloud services associated with OneDrive and SharePoint were accessed.	|Expanded the potential scope beyond the victim’s mailbox and required further review of file activity. |
 
-Authentication, cloud-application, and email telemetry connected these events through shared indicators, including the source IP address, timestamp alignment, application context, and Azure AD session identifier. The resulting sequence show
+Authentication, cloud-application, and email telemetry connected these events through shared indicators, including the source IP address, timestamp alignment, application context, and Azure AD session identifier. The resulting sequence shows rapid progression from MFA fatigue to account compromise, mailbox manipulation, concealment, and attempted financial fraud.
 
 ---
 
