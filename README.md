@@ -95,7 +95,7 @@ The following questions track the investigation from initial access through post
 
 ## Q00 — Sentinel Workspace
 - Answer: LAW-Cyber-Range
-### The investigation was conducted in the LAW-Cyber-Range Microsoft Sentinel workspace, confirming that the analysis used the intended dataset.
+#### The investigation was conducted in the LAW-Cyber-Range Microsoft Sentinel workspace, confirming that the analysis used the intended dataset.
 
 Q01 — Compromised Account
 - Answer: m.smith@lognpacific.org
